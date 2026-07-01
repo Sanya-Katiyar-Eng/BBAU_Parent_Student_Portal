@@ -1,7 +1,9 @@
 import streamlit as st
 from auth.login import login_user
 from dashboard.admin import admin_dashboard
+from utils.load_css import load_css
 
+load_css()
 st.set_page_config(
     page_title="BBAU Student Parent Portal",
     layout="wide"

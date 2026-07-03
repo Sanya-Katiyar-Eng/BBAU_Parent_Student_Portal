@@ -16,3 +16,5 @@ def login_user(email, password):
     if user:
         return user[0]   # role
     return None
+
+

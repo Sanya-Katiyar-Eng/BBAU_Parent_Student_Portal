@@ -1,13 +1,6 @@
 import streamlit as st
 from auth.login import login_user
 from dashboard.admin import admin_dashboard
-from utils.load_css import load_css
-
-load_css()
-st.set_page_config(
-    page_title="BBAU Student Parent Portal",
-    layout="wide"
-)
 
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
@@ -17,7 +10,20 @@ if "role" not in st.session_state:
 
 
 if not st.session_state.logged_in:  
-    st.title("BBAU Parent Student Portal")
+    st.set_page_config(layout="wide")
+
+    left, center, right = st.columns([2, 1, 2])
+
+    with center:
+        st.image("images/bbau logo.jpg", width=180)
+        st.markdown(
+    """
+    <p style="text-align:center; color:#0B5ED7;">
+        BBAU Student Parent portal
+    </p>
+    """,
+    unsafe_allow_html=True
+)
 
     email = st.text_input("Email")
     password = st.text_input("Password", type="password")

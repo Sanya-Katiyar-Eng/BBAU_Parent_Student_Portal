@@ -1,6 +1,12 @@
 import streamlit as st
-from auth.login import login_user
+from auth.login import login_user , add_bg_gif
 from dashboard.admin import admin_dashboard
+
+
+
+add_bg_gif()
+
+
 
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False

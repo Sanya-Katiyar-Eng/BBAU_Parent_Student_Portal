@@ -13,10 +13,32 @@ def add_student(
     cur = conn.cursor()
 
     try:
+         
+        cur.execute("""
+            INSERT INTO users
+            (
+                login_username,
+                password,
+                role
+            )
+            VALUES
+            (
+                %s,
+                %s,
+                'student'
+            )
+            RETURNING id;
+        """,
+        (
+            enrollment_no,
+            password
+        ))
+
+        user_id = cur.fetchone()[0]
 
         cur.execute("""
             INSERT INTO students
-            (
+            (   student_id,
                 roll_no,
                 enrollment_no,
                 department,
@@ -29,10 +51,11 @@ def add_student(
 
             VALUES
             (
-                %s,%s,%s,%s,%s,TRUE,'Pending','Active'
+                %s,%s,%s,%s,%s,%s,TRUE,'Pending','Active'
             )
         """,
         (
+            user_id, 
             roll_no,
             enrollment_no,
             department,

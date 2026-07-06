@@ -1,6 +1,6 @@
 from database.db import get_connection
 import streamlit as st
-
+from database.db import get_connection
 
 
 #===========================================
@@ -46,22 +46,33 @@ def add_bg_gif():
 #=====================================================================================
 #login user
 #========================================================================================
-def login_user(email, password):
+
+from database.db import get_connection
+
+def login_user(role, login_username, password):
+
     conn = get_connection()
     cur = conn.cursor()
 
-    cur.execute(
-        "SELECT role FROM users WHERE email=%s AND password=%s",
-        (email, password)
-    )
+    try:
 
-    user = cur.fetchone()
+        cur.execute("""
+            SELECT id, role
+            FROM users
+            WHERE login_username=%s
+            AND password=%s
+            AND role=%s
+        """,
+        (
+            login_username,
+            password,
+            role.lower()
+        ))
 
-    cur.close()
-    conn.close()
+        user = cur.fetchone()
 
-    if user:
-        return user[0]   # role
-    return None
+        return user
 
-
+    finally:
+        cur.close()
+        conn.close()

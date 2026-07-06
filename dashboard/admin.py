@@ -101,6 +101,18 @@ def admin_dashboard():
         )
 
         st.divider()
+        st.markdown("""
+<style>
+[data-testid="stSidebar"] {
+    overflow-y: auto;
+}
+
+[data-testid="stSidebarContent"] {
+    overflow-y: auto;
+    height: 100vh;
+}
+</style>
+""", unsafe_allow_html=True)
 
         selected = option_menu(
 
@@ -176,8 +188,6 @@ def admin_dashboard():
         st.success("Connected")
 
         st.markdown("### 🔔 Notifications")
-
-        st.info("3 New Alerts")
 
         st.divider()
 

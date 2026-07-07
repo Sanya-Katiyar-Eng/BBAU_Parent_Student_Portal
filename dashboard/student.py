@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from database.student_db import save_student_profile
 from database.student_db import (
     add_student,
     get_all_students,
@@ -239,3 +240,197 @@ def student_page():
 
         elif enrollment:
             st.info("Search for a student to view details before deletion.")
+
+
+#===========================================================================
+#student dashboard
+#===========================================================================
+from streamlit_option_menu import option_menu
+def student_dashboard():
+    st.markdown("""
+<style>
+[data-testid="stSidebar"] {
+    overflow-y: auto;
+}
+
+[data-testid="stSidebarContent"] {
+    overflow-y: auto;
+    height: 100vh;
+}
+</style>
+""", unsafe_allow_html=True)
+    with st.sidebar:
+
+        st.image("images/bbau logo.jpg", width=120)
+
+        st.markdown("## 🎓 Student Portal")
+        st.caption("Welcome, Student")
+
+        st.divider()
+
+        selected = option_menu(
+            menu_title=None,
+            options=[
+            "Dashboard",
+            "My Profile",
+            "My Courses",
+            "Class Timetable",
+            "Attendance",
+            "Results",
+            "Assignments",
+            "Notices",
+            "Messages",
+            "Documents",
+            "Settings"
+        ],
+            icons=[
+            "house",
+            "person-circle",
+            "book",
+            "calendar3",
+            "clipboard-check",
+            "bar-chart",
+            "journal-text",
+            "megaphone",
+            "chat-dots",
+            "folder2-open",
+            "gear"
+        ],
+            default_index=0,
+            styles={
+            "container": {
+                "padding": "0!important",
+                "background-color": "#D6DFF3",
+            },
+            "icon": {
+                "font-size": "18px",
+                "color": "#1F3A93",
+            },
+            "nav-link": {
+                "font-size": "16px",
+                "text-align": "left",
+                "margin": "6px",
+                "padding": "12px",
+                "border-radius": "10px",
+                "--hover-color": "#BFC7D4",
+            },
+            "nav-link-selected": {
+                "background-color": "#0B5ED7",
+                "color": "white",
+            },
+        },
+    )
+
+        st.divider()
+
+        st.success("🟢 Account Active")
+
+        if st.button("🚪 Logout", use_container_width=True):
+            st.session_state.clear()
+            st.rerun()
+
+
+#================================================================
+#student form
+#=================================================================
+def student_profile_form():
+
+    st.title("🎓 Complete Your Student Profile")
+    st.info("Please complete your profile before accessing the dashboard.")
+
+    with st.form("student_profile_form"):
+
+        st.subheader("👤 Personal Information")
+
+        student_name = st.text_input("Full Name")
+
+        dob = st.date_input("Date of Birth")
+
+        gender = st.selectbox(
+            "Gender",
+            ["Male", "Female", "Other"]
+        )
+
+        blood_group = st.selectbox(
+            "Blood Group",
+            [
+                "A+","A-","B+","B-",
+                "AB+","AB-","O+","O-"
+            ]
+        )
+
+        email = st.text_input("Email")
+
+        phone = st.text_input("Mobile Number")
+
+        st.subheader("📍 Address")
+
+        address = st.text_area("Full Address")
+
+        city = st.text_input("City")
+
+        state = st.text_input("State")
+
+        pincode = st.text_input("Pincode")
+
+        st.subheader("👨 Parent Information")
+
+        father_name = st.text_input("Father Name")
+
+        mother_name = st.text_input("Mother Name")
+
+        parent_phone = st.text_input("Parent Mobile Number")
+
+        parent_email = st.text_input("Parent Email")
+
+        occupation = st.text_input("Parent Occupation")
+
+        st.subheader("📷 Student Photo")
+
+        photo = st.file_uploader(
+            "Upload Passport Size Photo",
+            type=["jpg", "jpeg", "png"]
+        )
+
+        submitted = st.form_submit_button(
+            "Save Profile",
+            use_container_width=True
+        )
+
+    if submitted:
+        success = save_student_profile(
+
+        st.session_state.user_id,
+
+        student_name,
+        dob,
+        gender,
+        blood_group,
+        email,
+        phone,
+        address,
+        city,
+        state,
+        pincode,
+
+        father_name,
+        mother_name,
+        parent_phone,
+        parent_email,
+        occupation
+
+    )
+
+        if success:
+
+            st.success("Profile Completed Successfully.")
+
+            st.balloons()
+
+            st.rerun()
+
+    else:
+
+        st.error("Unable to save profile.")
+
+        

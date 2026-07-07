@@ -243,3 +243,216 @@ def get_student_by_enrollment(enrollment_no):
     conn.close()
 
     return student
+
+
+#==================================================================================
+#registration
+#====================================================================================
+def get_registration_status(student_id):
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT registration_status
+        FROM students
+        WHERE student_id=%s
+    """, (student_id,))
+
+    result = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    if result:
+        return result[0]
+
+    return None
+
+
+
+
+
+
+
+
+
+
+
+
+
+#================================================================================================================
+#submit all form info
+#============================================================================================
+from database.db import get_connection
+
+def save_student_profile(
+
+    student_id,
+
+    student_name,
+    dob,
+    gender,
+    blood_group,
+    email,
+    phone,
+    address,
+    city,
+    state,
+    pincode,
+
+    father_name,
+    mother_name,
+    parent_phone,
+    parent_email,
+    occupation
+
+):
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    try:
+
+        # ============================
+        # Update Student
+        # ============================
+
+        cur.execute("""
+
+        UPDATE students
+
+        SET
+
+        student_name=%s,
+        dob=%s,
+        gender=%s,
+        blood_group=%s,
+        email=%s,
+        phone=%s,
+        address=%s,
+        city=%s,
+        state=%s,
+        pincode=%s,
+
+        registration_status='Completed',
+        updated_at=CURRENT_TIMESTAMP
+
+        WHERE student_id=%s
+
+        """,
+
+        (
+
+        student_name,
+        dob,
+        gender,
+        blood_group,
+        email,
+        phone,
+        address,
+        city,
+        state,
+        pincode,
+
+        student_id
+
+        ))
+
+        # ============================
+        # Parent Login
+        # ============================
+
+        cur.execute("""
+
+        INSERT INTO users
+        (
+
+        login_username,
+        password,
+        role
+
+        )
+
+        VALUES
+
+        (
+
+        %s,
+        %s,
+        'parent'
+
+        )
+
+        RETURNING id
+
+        """,
+
+        (
+
+        parent_phone,
+        "Parent@123"
+
+        ))
+
+        parent_id = cur.fetchone()[0]
+
+        # ============================
+        # Parent Table
+        # ============================
+
+        cur.execute("""
+
+        INSERT INTO parents
+        (
+
+        parent_id,
+        student_id,
+        father_name,
+        mother_name,
+        phone,
+        email,
+        occupation,
+        address
+
+        )
+
+        VALUES
+
+        (
+
+        %s,%s,%s,%s,%s,%s,%s,%s
+
+        )
+
+        """,
+
+        (
+
+        parent_id,
+        student_id,
+        father_name,
+        mother_name,
+        parent_phone,
+        parent_email,
+        occupation,
+        address
+
+        ))
+
+        conn.commit()
+
+        return True
+
+    except Exception as e:
+
+        conn.rollback()
+
+        print(e)
+
+        return False
+
+    finally:
+
+        cur.close()
+        conn.close()

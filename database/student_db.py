@@ -1,40 +1,47 @@
 from database.db import get_connection
 import streamlit as st
-
+from werkzeug.security import generate_password_hash
 def add_student(
     roll_no,
     enrollment_no,
     department,
-    semester,
-    password
+    semester
 ):
+    temp_password = f"BBAU@{enrollment_no}"
 
+    hashed_password = generate_password_hash(temp_password)
     conn = get_connection()
     cur = conn.cursor()
 
     try:
          
         cur.execute("""
-            INSERT INTO users
-            (
-                login_username,
-                password,
-                role
-            )
-            VALUES
-            (
-                %s,
-                %s,
-                'student'
-            )
-            RETURNING id;
-        """,
-        (
-            enrollment_no,
-            password
-        ))
+INSERT INTO users
+(
+    login_username,
+    password,
+    role,
+    first_login,
+    account_status
+)
+VALUES
+(
+    %s,
+    %s,
+    'student',
+    TRUE,
+    'Active'
+)
+RETURNING id
+""",
+(
+    enrollment_no,
+    hashed_password
+))
 
         user_id = cur.fetchone()[0]
+        print(user_id)
+
 
         cur.execute("""
             INSERT INTO students
@@ -43,15 +50,13 @@ def add_student(
                 enrollment_no,
                 department,
                 semester,
-                password,
-                first_login,
                 registration_status,
                 account_status
             )
 
             VALUES
             (
-                %s,%s,%s,%s,%s,%s,TRUE,'Pending','Active'
+                %s,%s,%s,%s,%s,'Pending','Active'
             )
         """,
         (
@@ -60,7 +65,6 @@ def add_student(
             enrollment_no,
             department,
             semester,
-            password
         ))
 
         conn.commit()
@@ -193,25 +197,36 @@ def delete_student(enrollment_no):
     try:
 
         cur.execute("""
-            DELETE FROM students
-            WHERE enrollment_no = %s
+            SELECT student_id
+            FROM students
+            WHERE enrollment_no=%s
         """, (enrollment_no,))
+        row = cur.fetchone()
+        if row is None:
+            return False
+        user_id = row[0]
+        cur.execute("""
+            DELETE FROM students
+            WHERE student_id=%s
+        """, (user_id,))
+        cur.execute("""
+            DELETE FROM users
+            WHERE id=%s
+        """, (user_id,))
+
 
         conn.commit()
 
-        if cur.rowcount > 0:
-            return True
-
-        return False
-
+        return True
     except Exception as e:
         conn.rollback()
-        print(e)
+        st.error(f"Database Error: {e}")
         return False
-
     finally:
+
         cur.close()
         conn.close()
+    
 
 def get_student_by_enrollment(enrollment_no):
 

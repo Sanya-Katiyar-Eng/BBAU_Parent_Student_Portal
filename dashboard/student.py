@@ -64,17 +64,11 @@ def student_page():
         [1,2,3,4,5,6,7,8]
     )
 
-            password = st.text_input(
-        "Temporary Password",
-        type="password",
-        help="Student will change this after first login."
-    )
-
             submit = st.form_submit_button("Add Student")
 
         if submit:
 
-            if not all([enrollment_no, roll_no, password]):
+            if not all([enrollment_no, roll_no]):
                 st.error("Please fill all required fields.")
 
             else:
@@ -84,13 +78,17 @@ def student_page():
                 enrollment_no=enrollment_no,
                 department=department,
                 semester=semester,
-                password=password
             )
 
                 if success:
                     st.success("Student added successfully.")
-                else:
-                    st.error("Enrollment Number already exists.")
+
+                    #st.info(f"""
+#Temporary Login
+
+#Enrollment Number : {enrollmen
+               # else:
+                 #   st.error("Enrollment Number already exists.")
 
 
 #======================================================================================

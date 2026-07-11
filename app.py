@@ -1,9 +1,5 @@
 import streamlit as st
-from auth.login import login_user , add_bg_gif
-from dashboard.admin import admin_dashboard
-from dashboard.student import student_dashboard,student_profile_form
-from database.student_db import get_registration_status,save_student_profile
-
+from auth.login import add_bg_gif
 add_bg_gif()
 
 
@@ -12,216 +8,141 @@ add_bg_gif()
 #from dashboard.parent import parent_dashboard
 
 
-import streamlit as st
-
-# =========================================
-# Imports
-# =========================================
-
-from auth.login import login_user, add_bg_gif
-from auth.login import set_new_password
-
+from auth.login import authentication
 from dashboard.admin import admin_dashboard
 from dashboard.student import student_dashboard
-from dashboard.parent import parent_dashboard
+# from dashboard.parent import parent_dashboard
 
 from dashboard.student import student_profile_form
-
 from database.student_db import get_registration_status
 
+if "auth_page" not in st.session_state:
+    st.session_state.auth_page = "login"
 
-# =========================================
+if "activate_user_id" not in st.session_state:
+    st.session_state.activate_user_id = None
+# ==========================================================
 # Page Config
-# =========================================
+# ==========================================================
 
 st.set_page_config(
+    
     page_title="BBAU Student Parent Portal",
     page_icon="🎓",
     layout="wide"
 )
-
-add_bg_gif()
-
-
-# =========================================
+# ==========================================================
 # Session State Initialization
-# =========================================
+# ==========================================================
 
 defaults = {
     "logged_in": False,
     "user_id": None,
     "role": None,
-    "first_login": False
+    "auth_page": "login",
+    "activate_user_id": None,
 }
 
 for key, value in defaults.items():
-
     if key not in st.session_state:
         st.session_state[key] = value
 
 
-# =========================================
-# Login Screen
-# =========================================
 
-def show_login_page():
+# ==========================================================
+# Logout
+# ==========================================================
 
-    left, center, right = st.columns([2,1,2])
+def logout():
 
-    with center:
+    st.session_state.logged_in = False
+    st.session_state.user_id = None
+    st.session_state.role = None
 
-        st.image(
-            "images/bbau logo.jpg",
-            width=180
-        )
-
-        st.markdown(
-        """
-        <h2 style="text-align:center;color:#0B5ED7;">
-        BBAU Student Parent Portal
-        </h2>
-        """,
-        unsafe_allow_html=True
-        )
-
-        role = st.selectbox(
-            "Login As",
-            [
-                "Admin",
-                "Student",
-                "Parent"
-            ]
-        )
-
-        # -------------------------
-        # Dynamic Username Field
-        # -------------------------
-
-        if role == "Admin":
-
-            login_username = st.text_input(
-                "Email"
-            )
-
-        elif role == "Student":
-
-            login_username = st.text_input(
-                "Enrollment Number"
-            )
-
-        else:
-
-            login_username = st.text_input(
-                "Parent Mobile Number"
-            )
-
-        password = st.text_input(
-            "Password",
-            type="password"
-        )
-
-        # -------------------------
-        # Login Button
-        # -------------------------
-
-        if st.button(
-            "Login",
-            use_container_width=True
-        ):
-
-            user = login_user(
-                role,
-                login_username,
-                password
-            )
-
-            if user["success"]:
-
-                st.session_state.logged_in = True
-                st.session_state.user_id = user["user_id"]
-                st.session_state.role = user["role"]
-                st.session_state.first_login = user["first_login"]
-
-                st.rerun()
-
-            else:
-
-                st.error(
-                    user["message"]
-                )
+    st.rerun()
 
 
-# =========================================
-# Dashboard Routing
-# =========================================
+# ==========================================================
+# Student Router
+# ==========================================================
 
-def route_user():
+def student_route():
 
-    # -----------------------------------
-    # First Login Password Setup
-    # -----------------------------------
+    registration_status = get_registration_status(
+        st.session_state.user_id
+    )
 
-    if st.session_state.first_login:
+    if registration_status == "Pending":
 
-        set_new_password(
-            st.session_state.user_id
-        )
+        student_profile_form()
 
-        return
+    else:
 
-    # -----------------------------------
-    # Admin
-    # -----------------------------------
+        student_dashboard()
 
-    if st.session_state.role == "admin":
+
+# ==========================================================
+# Dashboard Router
+# ==========================================================
+
+def dashboard_router():
+
+    role = st.session_state.role.lower()
+
+    if role == "admin":
 
         admin_dashboard()
 
+    elif role == "student":
+
+        student_route()
+
+    elif role == "parent":
+
+        st.write("Parent Dashboard")
+
+        # parent_dashboard()
+
+    else:
+
+        st.error("Invalid Role")
+
+    st.sidebar.divider()
+
+    if st.sidebar.button(
+        "Logout",
+        use_container_width=True
+    ):
+
+        logout()
+# ==========================================================
+# Main Application
+# ==========================================================
+
+def main():
+
+    # -------------------------------
+    # User Not Logged In
+    # -------------------------------
+
+    if not st.session_state.logged_in:
+
+        authentication()
+
         return
 
-    # -----------------------------------
-    # Student
-    # -----------------------------------
+    # -------------------------------
+    # User Logged In
+    # -------------------------------
 
-    if st.session_state.role == "student":
-
-        registration_status = (
-            get_registration_status(
-                st.session_state.user_id
-            )
-        )
-
-        if registration_status == "Pending":
-
-            student_profile_form()
-
-        else:
-
-            student_dashboard()
-
-        return
-
-    # -----------------------------------
-    # Parent
-    # -----------------------------------
-
-    if st.session_state.role == "parent":
-
-        parent_dashboard()
-
-        return
-
-    st.error("Invalid Role")
+    dashboard_router()
 
 
-# =========================================
-# Main App
-# =========================================
+# ==========================================================
+# Run Application
+# ==========================================================
 
-if not st.session_state.logged_in:
+if __name__ == "__main__":
 
-    show_login_page()
-
-else:
-
-    route_user()
+    main()
+    

@@ -1,7 +1,10 @@
 from database.db import get_connection
-import streamlit as st
-from database.db import get_connection
-
+from database.auth_db import (
+    verify_login,
+    verify_student,
+    create_password
+)
+from auth.auth_service import authenticate_user
 
 #===========================================
 #use gif
@@ -47,208 +50,241 @@ def add_bg_gif():
  
 
 
-# =====================================================
-# Login User
-# =====================================================
-
-def login_user(role, login_username, password):
-
-    conn = get_connection()
-    cur = conn.cursor()
-
-    try:
-
-        cur.execute("""
-            SELECT
-                id,
-                role,
-                first_login,
-                account_status
-
-            FROM users
-
-            WHERE
-
-                login_username=%s
-                AND role=%s
-
-        """,
-        (
-            login_username,
-            role.lower()
-        ))
-
-        user = cur.fetchone()
-
-        if user is None:
-            return {
-                "success": False,
-                "message": "User Not Found"
-            }
-
-        user_id = user[0]
-        db_role = user[1]
-        first_login = user[2]
-        account_status = user[3]
-
-        if account_status.lower() != "active":
-
-            return {
-                "success": False,
-                "message": "Account is Inactive"
-            }
-
-        # ------------------------------
-        # First Login
-        # ------------------------------
-
-        if first_login:
-
-            return {
-
-                "success": True,
-                "first_login": True,
-                "user_id": user_id,
-                "role": db_role
-
-            }
-
-        # ------------------------------
-        # Normal Login
-        # ------------------------------
-
-        cur.execute("""
-
-            SELECT id
-
-            FROM users
-
-            WHERE
-
-            login_username=%s
-            AND password=%s
-            AND role=%s
-
-        """,
-
-        (
-            login_username,
-            password,
-            role.lower()
-
-        ))
-
-        login = cur.fetchone()
-
-        if login:
-
-            return {
-
-                "success": True,
-                "first_login": False,
-                "user_id": user_id,
-                "role": db_role
-
-            }
-
-        return {
-
-            "success": False,
-            "message": "Invalid Password"
-
-        }
-
-    finally:
-
-        cur.close()
-        conn.close()
-
-
-
-
-
-
-
-
-
-#first login
-#=======================================
 import streamlit as st
-from database.db import get_connection
+
+from database.auth_db import (
+    verify_login,
+    verify_student,
+    create_password
+)
 
 
-def set_new_password(user_id):
+# ==========================================================
+# Session State
+# ==========================================================
 
-    st.title("🔐 First Time Login")
+if "auth_page" not in st.session_state:
+    st.session_state.auth_page = "login"
 
-    st.info("Create your password to continue.")
+if "activate_user_id" not in st.session_state:
+    st.session_state.activate_user_id = None
 
-    with st.form("first_login_form"):
 
-        new_password = st.text_input(
-            "New Password",
-            type="password"
+# ==========================================================
+# Login Screen
+# ==========================================================
+
+def show_login():
+
+    st.image("images/bbau logo.jpg", width=170)
+
+    st.markdown(
+        """
+        <h2 style='text-align:center;color:#0B5ED7'>
+        BBAU Student Parent Portal
+        </h2>
+        """,
+        unsafe_allow_html=True
+    )
+
+    role = st.selectbox(
+        "Login As",
+        [
+            "Admin",
+            "Student",
+            "Parent"
+        ]
+    )
+
+    # ------------------------------
+
+    if role == "Admin":
+
+        username = st.text_input("Email")
+
+    elif role == "Student":
+
+        username = st.text_input("Enrollment Number")
+
+    else:
+
+        username = st.text_input("Parent Mobile Number")
+
+    password = st.text_input(
+        "Password",
+        type="password"
+    )
+
+    # ------------------------------
+
+    if st.button(
+        "Login",
+        use_container_width=True
+    ):
+
+        user = verify_login(
+            username,
+            password,
+            role
         )
 
-        confirm_password = st.text_input(
-            "Confirm Password",
-            type="password"
-        )
+        # --------------------------
 
-        submit = st.form_submit_button(
-            "Create Password",
-            use_container_width=True
-        )
+        if user.get("first_login"):
 
-    if submit:
+            st.session_state.activate_user_id = user["user_id"]
+            st.session_state.auth_page = "activate"
 
-        if new_password == "" or confirm_password == "":
-            st.error("All fields are required.")
-            return False
+            st.rerun()
+        elif user["success"]:
 
-        if len(new_password) < 8:
-            st.error("Password must be at least 8 characters.")
-            return False
-
-        if new_password != confirm_password:
-            st.error("Passwords do not match.")
-            return False
-
-        conn = get_connection()
-        cur = conn.cursor()
-
-        try:
-
-            cur.execute("""
-                UPDATE users
-
-                SET
-
-                password=%s,
-                first_login=FALSE
-
-                WHERE id=%s
-            """,
-            (
-                new_password,
-                user_id
-            ))
-
-            conn.commit()
-
-            st.success("Password created successfully.")
-
-            st.session_state.first_login = False
+            st.session_state.logged_in = True
+            st.session_state.user_id = user["user_id"]
+            st.session_state.role = user["role"]
 
             st.rerun()
 
-        except Exception as e:
+        # --------------------------
 
-            conn.rollback()
 
-            st.error(e)
+        else:
 
-        finally:
+            st.error(user["message"])
 
-            cur.close()
-            conn.close()
+    st.divider()
+
+    st.caption("First time user? Activate your account.")
+
+    if st.button(
+        "Activate Account",
+        use_container_width=True
+    ):
+
+        st.session_state.auth_page = "activate"
+
+        st.rerun()
+
+
+# ==========================================================
+# Activate Account
+# ==========================================================
+
+def show_activate_account():
+
+    st.title("Activate Account")
+
+    enrollment = st.text_input(
+        "Enrollment Number"
+    )
+
+    roll_no = st.text_input(
+        "Roll Number"
+    )
+
+    if st.button(
+        "Verify",
+        use_container_width=True
+    ):
+
+        student = verify_student(
+            enrollment,
+            roll_no
+        )
+
+        if student:
+
+            st.session_state.activate_user_id = student[0]
+            st.session_state.auth_page = "password"
+
+            st.rerun()
+
+        else:
+
+            st.error(
+                "Enrollment Number or Roll Number is incorrect."
+            )
+
+    if st.button("Back"):
+
+        st.session_state.auth_page = "login"
+
+        st.rerun()
+
+
+# ==========================================================
+# Create Password
+# ==========================================================
+
+def show_create_password():
+
+    st.title("Create Password")
+
+    password = st.text_input(
+        "New Password",
+        type="password"
+    )
+
+    confirm = st.text_input(
+        "Confirm Password",
+        type="password"
+    )
+
+    if st.button(
+        "Save Password",
+        use_container_width=True
+    ):
+
+        if password != confirm:
+
+            st.error("Passwords do not match.")
+
+            return
+
+        if len(password) < 8:
+
+            st.error(
+                "Password must be at least 8 characters."
+            )
+
+            return
+
+        success = create_password(
+            st.session_state.activate_user_id,
+            password
+        )
+
+        if success:
+
+            st.success(
+                "Password created successfully."
+            )
+
+            st.session_state.activate_user_id = None
+            st.session_state.auth_page = "login"
+
+            st.rerun()
+
+        else:
+
+            st.error(
+                "Something went wrong."
+            )
+
+
+# ==========================================================
+# Main Authentication Router
+# ==========================================================
+
+def authentication():
+
+    if st.session_state.auth_page == "login":
+
+        show_login()
+
+    elif st.session_state.auth_page == "activate":
+
+        show_activate_account()
+
+    elif st.session_state.auth_page == "password":
+
+        show_create_password()

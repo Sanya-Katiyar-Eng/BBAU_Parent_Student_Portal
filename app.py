@@ -10,10 +10,10 @@ add_bg_gif()
 
 from auth.login import authentication
 from dashboard.admin import admin_dashboard
-from dashboard.student import student_dashboard
+from dashboard.student import student_dashboard,dashboard_home
 # from dashboard.parent import parent_dashboard
 
-from dashboard.student import student_profile_form
+from dashboard.student import student_profile_form,dashboard_home
 from database.student_db import get_registration_status
 
 if "auth_page" not in st.session_state:
@@ -95,7 +95,7 @@ def dashboard_router():
 
     elif role == "student":
 
-        student_route()
+        student_dashboard()
 
     elif role == "parent":
 

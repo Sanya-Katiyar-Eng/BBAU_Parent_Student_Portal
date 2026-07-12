@@ -1,11 +1,6 @@
 from database.db import get_connection
-from database.auth_db import (
-    verify_login,
-    verify_student,
-    create_password
-)
 from auth.auth_service import authenticate_user
-
+import re
 #===========================================
 #use gif
 #=============================================
@@ -58,7 +53,14 @@ from database.auth_db import (
     create_password
 )
 
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
 
+if "user_id" not in st.session_state:
+    st.session_state.user_id = None
+
+if "role" not in st.session_state:
+    st.session_state.role = None
 # ==========================================================
 # Session State
 # ==========================================================
@@ -133,7 +135,7 @@ def show_login():
         if user.get("first_login"):
 
             st.session_state.activate_user_id = user["user_id"]
-            st.session_state.auth_page = "activate"
+            st.session_state.auth_page = "password"
 
             st.rerun()
         elif user["success"]:
@@ -241,12 +243,15 @@ def show_create_password():
             return
 
         if len(password) < 8:
+             st.error( "Password must be at least 8 characters.")
+        elif not re.search(r"[A-Z]", password):
+                st.error("One uppercase required")
 
-            st.error(
-                "Password must be at least 8 characters."
-            )
+        elif not re.search(r"[a-z]", password):
+                st.error("One lowercase required")
 
-            return
+        elif not re.search(r"\d", password):
+                st.error("One digit required")
 
         success = create_password(
             st.session_state.activate_user_id,

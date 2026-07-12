@@ -124,6 +124,8 @@ def create_password(user_id, new_password):
 # Verify Login Password
 # ==========================================================
 
+from werkzeug.security import check_password_hash
+
 def verify_login(login_username, password, role):
 
     conn = get_connection()
@@ -138,15 +140,11 @@ def verify_login(login_username, password, role):
                 role,
                 first_login,
                 account_status
-
             FROM users
-
             WHERE
-
-                login_username=%s
-                AND role=%s
-        """,
-        (
+                login_username = %s
+                AND role = %s
+        """, (
             login_username,
             role.lower()
         ))
@@ -154,7 +152,6 @@ def verify_login(login_username, password, role):
         user = cur.fetchone()
 
         if user is None:
-
             return {
                 "success": False,
                 "message": "User not found."
@@ -166,19 +163,15 @@ def verify_login(login_username, password, role):
         first_login = user[3]
         account_status = user[4]
 
-        # Account Inactive
-
+        # Account Status Check
         if account_status.lower() != "active":
-
             return {
                 "success": False,
                 "message": "Account is inactive."
             }
 
         # First Login
-
         if first_login:
-
             return {
                 "success": False,
                 "first_login": True,
@@ -186,30 +179,31 @@ def verify_login(login_username, password, role):
                 "message": "Activate your account."
             }
 
-        # Password Check
-
-        if db_password != password:
-
+        # Password Verification
+        if not check_password_hash(db_password, password):
             return {
                 "success": False,
                 "message": "Invalid Password."
             }
 
-        # Success
-
+        # Login Success
         return {
-
             "success": True,
             "user_id": user_id,
             "role": db_role,
             "first_login": False
-
         }
 
     finally:
-
         cur.close()
         conn.close()
+            
+            
+
+        
+
+            
+            
 
 def verify_password(entered_password, saved_password):
 

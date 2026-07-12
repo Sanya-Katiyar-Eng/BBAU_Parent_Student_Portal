@@ -328,6 +328,44 @@ def student_dashboard():
             st.rerun()
 
 
+    if selected == "Dashboard":
+        dashboard_home()
+
+    elif selected == "My Profile":
+        profile_page()
+
+    elif selected == "My Courses":
+        courses_page()
+
+    elif selected == "Class Timetable":
+        timetable_page()
+
+    elif selected == "Attendance":
+        attendance_page()
+
+    elif selected == "Results":
+        results_page()
+
+    elif selected == "Assignments":
+        #assignments_page()
+        pass
+    elif selected == "Notices":
+        pass
+        #notices_page()
+
+    elif selected == "Messages":
+        pass
+        #messages_page()
+
+    elif selected == "Documents":
+        pass
+        #documents_page()
+
+    elif selected == "Settings":
+        pass
+        ##settings_page()
+
+
 #================================================================
 #student form
 #=================================================================
@@ -431,4 +469,142 @@ def student_profile_form():
 
         st.error("Unable to save profile.")
 
-        
+
+
+
+
+
+
+
+
+#==================================================================================================
+#student dashboard home
+#==========================================================================================================
+
+
+def dashboard_home():
+
+    st.title("🎓 Student Dashboard")
+
+    c1, c2, c3, c4 = st.columns(4)
+
+    c1.metric("Attendance", "92%")
+    c2.metric("Current CGPA", "8.15")
+    c3.metric("Courses", "6")
+    c4.metric("Pending Assignments", "2")
+
+    st.divider()
+
+    left, right = st.columns([2,1])
+
+    with left:
+
+        st.subheader("Today's Classes")
+
+        st.info("10:00 AM  Python Programming")
+        st.info("12:00 PM  DBMS")
+        st.info("02:00 PM  Machine Learning")
+
+    with right:
+
+        st.subheader("Quick Links")
+
+        st.button("View Attendance", use_container_width=True)
+        st.button("View Results", use_container_width=True)
+        st.button("Assignments", use_container_width=True)
+
+#==============================================================================================
+#profile page
+#=======================================================================================================
+
+
+def profile_page():
+
+    st.title("My Profile")
+
+    st.write("Student Details will come from database.")
+
+    col1,col2=st.columns(2)
+
+    with col1:
+
+        st.text_input("Name","")
+
+        st.text_input("Enrollment","")
+
+        st.text_input("Department","")
+
+    with col2:
+
+        st.text_input("Semester","")
+
+        st.text_input("Email","")
+
+        st.text_input("Mobile","")
+
+
+#=====================================================================================
+#course page
+#============================================================================================
+
+def courses_page():
+
+    st.title("My Courses")
+
+    st.dataframe(
+        {
+            "Course Code":["BCA401","BCA402","BCA403"],
+            "Course Name":["Python","DBMS","Machine Learning"],
+            "Credits":[4,4,3]
+        },
+        use_container_width=True
+    )
+#=================================================================================================================
+#attendance page
+#=========================================================================================================================
+
+def attendance_page():
+
+    st.title("Attendance")
+
+    st.progress(0.92)
+
+    st.dataframe(
+        {
+            "Subject":["Python","DBMS","ML"],
+            "Attendance":["95%","88%","93%"]
+        }
+    )
+
+
+#========================================================================================================================================
+#result page
+#========================================================================================================================================
+def results_page():
+
+    st.title("Results")
+
+    st.dataframe(
+        {
+            "Semester":[1,2,3,4],
+            "SGPA":[8.1,8.4,8.3,8.6]
+        }
+    )
+
+#+======================================================================
+#time table
+#================================================================================
+import streamlit as st
+
+def timetable_page():
+
+    st.title("Weekly Timetable")
+
+    st.info("Monday : Python")
+
+    st.info("Tuesday : DBMS")
+
+    st.info("Wednesday : ML")
+
+
+

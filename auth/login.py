@@ -1,6 +1,7 @@
 from database.db import get_connection
 from auth.auth_service import authenticate_user
 import re
+import streamlit as st
 #===========================================
 #use gif
 #=============================================
@@ -41,11 +42,6 @@ def add_bg_gif():
     )
 
 
-
- 
-
-
-import streamlit as st
 
 from database.auth_db import (
     verify_login,

@@ -180,7 +180,11 @@ def verify_login(login_username, password, role):
             }
 
         # Password Verification
-        if not check_password_hash(db_password, password):
+        if db_password == password:
+            password_valid = True
+        else:
+            password_valid = check_password_hash(db_password, password)
+        if not password_valid:
             return {
                 "success": False,
                 "message": "Invalid Password."
@@ -203,11 +207,9 @@ def verify_login(login_username, password, role):
         
 
             
-            
-
 def verify_password(entered_password, saved_password):
+    try:
+        return check_password_hash(saved_password, entered_password)
+    except Exception:
+        return saved_password == entered_password           
 
-    return check_password_hash(
-        saved_password,
-        entered_password
-    )

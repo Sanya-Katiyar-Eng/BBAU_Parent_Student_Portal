@@ -105,13 +105,13 @@ def student_page():
             st.metric(" Total Students", total)
 
         with c2:
-            st.metric("✅ Completed", completed)
+            st.metric(" Completed", completed)
 
         with c3:
-            st.metric("🟡 Pending", pending)
+            st.metric(" Pending", pending)
 
         with c4:
-            st.metric("🟢 Active", active)
+            st.metric(" Active", active)
         search = st.text_input(" Search Student")
         c1, c2, c3, c4 = st.columns(4)
         with c1:

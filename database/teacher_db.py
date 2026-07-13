@@ -259,26 +259,6 @@ def update_teacher(
         cur.close()
         conn.close()
 
-success = update_teacher(
-    teacher_id=1,
-    teacher_name="Rahul Sharma",
-    employee_id="EMP001",
-    department="Computer Science",
-    designation="Assistant Professor",
-    email="rahul@gmail.com",
-    mobile="9876543210",
-    qualification="M.Tech",
-    experience=6,
-    gender="Male",
-    address="Lucknow"
-)
-
-if success:
-    print("Teacher updated successfully.")
-else:
-    print("Update failed.")
-
-
 #=======================================================================================================================
 #delete teacher
 #================================================================================================================================

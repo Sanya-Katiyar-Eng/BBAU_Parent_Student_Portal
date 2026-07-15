@@ -1,7 +1,8 @@
 
 from database.db import get_connection
 from werkzeug.security import generate_password_hash
-
+import streamlit as st
+from auth.login import normalize_text
 
 def add_teacher(
     teacher_name,
@@ -84,7 +85,6 @@ def add_teacher(
         cur.execute("""
             INSERT INTO teachers
             (
-                teacher_id,
                 teacher_name,
                 employee_id,
                 department,
@@ -110,13 +110,12 @@ def add_teacher(
             )
             VALUES
             (
-                %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
+                %s,%s,%s,%s,%s,%s,%s,%s,%s,
                 %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                 %s,%s,'Active'
             )
         """,
         (
-            teacher_id,
             teacher_name,
             employee_id,
             department,
@@ -193,13 +192,12 @@ from database.db import get_connection
 
 
 def update_teacher(
-    teacher_id,
     teacher_name,
     employee_id,
     department,
     designation,
     email,
-    mobile,
+    phone,
     qualification,
     experience,
     gender,
@@ -220,31 +218,31 @@ def update_teacher(
 
     try:
         cur.execute("""
-            UPDATE teacher_registration
+            UPDATE teachers
             SET
                 teacher_name = %s,
                 employee_id = %s,
                 department = %s,
                 designation = %s,
                 email = %s,
-                mobile = %s,
+                phone = %s,
                 qualification = %s,
                 experience = %s,
                 gender = %s,
                 address = %s
-            WHERE teacher_id = %s
+            WHERE teacher_name = %s
         """, (
             teacher_name,
             employee_id,
             department,
             designation,
             email,
-            mobile,
+            phone,
             qualification,
             experience,
             gender,
             address,
-            teacher_id
+            teacher_name
         ))
 
         conn.commit()
@@ -252,7 +250,9 @@ def update_teacher(
 
     except Exception as e:
         conn.rollback()
+        st.error(f"Database Error: {e}")
         print("Error:", e)
+        
         return False
 
     finally:
@@ -264,62 +264,85 @@ def update_teacher(
 #================================================================================================================================
 from database.db import get_connection
 
-
-def delete_teacher(teacher_id):
-    """
-    Deletes a teacher and associated login.
-
-    Args:
-        teacher_id (int)
-
-    Returns:
-        bool
-    """
+def delete_teacher(teacher_name, employee_id):
 
     conn = get_connection()
     cur = conn.cursor()
 
     try:
-        # Get user_id linked to teacher
+        # Check teacher exists
         cur.execute("""
-            SELECT user_id
-            FROM teacher_registration
-            WHERE teacher_id = %s
-        """, (teacher_id,))
+            SELECT teacher_name
+            FROM teachers
+            WHERE teacher_name=%s
+            AND employee_id=%s
+        """, (teacher_name, employee_id))
 
-        result = cur.fetchone()
-
-        if result is None:
+        if cur.fetchone() is None:
             return False
 
-        user_id = result[0]
-
-        # Delete teacher details
+        # Delete from teachers
         cur.execute("""
-            DELETE FROM teacher_registration
-            WHERE teacher_id = %s
-        """, (teacher_id,))
+            DELETE FROM teachers
+            WHERE teacher_name=%s
+            AND employee_id=%s
+        """, (teacher_name, employee_id))
 
-        # Delete login account
+        # Delete from users
         cur.execute("""
             DELETE FROM users
-            WHERE id = %s
-        """, (user_id,))
+            WHERE login_username = %s
+              AND role = 'teacher'
+        """, (teacher_name,))
 
         conn.commit()
         return True
 
     except Exception as e:
         conn.rollback()
-        print("Error:", e)
+        st.error(f"Database Error: {e}")
+        print(e)
         return False
 
     finally:
         cur.close()
         conn.close()
-success = delete_teacher(1)
 
-if success:
-    print("Teacher deleted successfully.")
-else:
-    print("Teacher not found or delete failed.")
+#=====================================================================================
+# search teacher
+#=====================================================================================================
+def search_teachers(name="", employee_id=""):
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    query = """
+    SELECT
+        teacher_name,
+        employee_id,
+        department,
+        designation,
+        phone,
+        email
+    FROM teachers
+    WHERE 1=1
+    """
+
+    values = []
+
+    if name:
+        query += " AND teacher_name ILIKE %s"
+        values.append(f"%{name}%")
+
+    if employee_id:
+        query += " AND employee_id ILIKE %s"
+        values.append(f"%{employee_id}%")
+
+    cur.execute(query, values)
+
+    teachers = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return teachers

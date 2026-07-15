@@ -1,8 +1,8 @@
 
 
 import streamlit as st
-
-from database.teacher_db import add_teacher,get_all_teachers,update_teacher
+from auth.login import normalize_text
+from database.teacher_db import add_teacher,get_all_teachers,update_teacher,search_teachers,delete_teacher
 def teacher_page():
 
     st.title("Teacher Management")
@@ -220,48 +220,43 @@ def teacher_page():
     # =====================================================
 
     with tab3:
+        with st.form("edit_teacher_form"):
 
-        st.subheader("✏️ Edit Teacher")
-
-        teacher_name = st.text_input("Teacher Name")
-        employee_id = st.text_input("Employee ID")
-        department = st.text_input("Department")
-        designation = st.text_input("Designation")
-        email = st.text_input("Email")
-        mobile = st.text_input("Mobile")
-        qualification = st.text_input("Qualification")
-        experience = st.number_input(
-        "Experience (Years)",
-        min_value=0,
-        max_value=50,
-        step=1
-    )
-        gender = st.selectbox(
+            teacher_name = st.text_input("Teacher Name", key="edit_teacher_name")
+            employee_id = st.text_input("Employee ID", key="edit_employee_id")
+            department = st.text_input("Department", key="edit_department")
+            designation = st.text_input("Designation", key="edit_designation")
+            email = st.text_input("Email", key="edit_email")
+            mobile = st.text_input("Mobile", key="edit_mobile")
+            qualification = st.text_input("Qualification", key="edit_qualification")
+            experience = st.number_input("Experience", key="edit_experience")
+            gender = st.selectbox(
         "Gender",
-        ["Male", "Female", "Other"]
+        ["Male", "Female", "Other"],
+        key="edit_gender"
     )
-        address = st.text_area("Address")
+            address = st.text_area("Address", key="edit_address")
 
-        update_btn = st.form_submit_button("Update Teacher")
+            update_btn = st.form_submit_button("Update Teacher")
 
-        if update_btn:
-            edit_teacher = update_teacher(
-        teacher_name=teacher_name,
-        employee_id=employee_id,
-        department=department,
-        designation=designation,
-        email=email,
-        mobile=mobile,
-        qualification=qualification,
-        experience=experience,
-        gender=gender,
-        address=address,
+            if update_btn:
+                success=update_teacher(
+        teacher_name,
+        employee_id,
+        department,
+        designation,
+        email,
+        mobile,
+        qualification,
+        experience,
+        gender,
+        address,
     )
+                if success:
+                    st.success("Update Successfully !")
+                else:
+                    st.error("Update failed")
 
-    if edit_teacher:
-        st.success("Teacher updated successfully!")
-    else:
-        st.error("Failed to update teacher.")
 
     # =====================================================
     # DELETE
@@ -271,4 +266,43 @@ def teacher_page():
 
         st.subheader("🗑 Delete Teacher")
 
-        st.warning("Delete Teacher UI Coming Soon.")
+        name = st.text_input(
+    "Search by Teacher Name",
+    key="search_name"
+)
+
+        employee = st.text_input(
+    "Search by Employee ID",
+    key="search_employee"
+)
+
+        teachers = search_teachers(name, employee)
+
+        if teachers:
+
+            st.dataframe(
+        teachers,
+        use_container_width=True
+    )
+
+            selected = st.selectbox(
+        "Select Teacher",
+        [f"{t[0]} ({t[1]})" for t in teachers]
+    )
+
+            if st.button("Delete"):
+
+                teacher_name = selected.split(" (")[0]
+                employee_id = selected.split("(")[1].replace(")", "")
+
+            if delete_teacher(
+            teacher_name,
+            employee_id
+        ):
+                st.success("Teacher Deleted Successfully")
+                st.rerun()
+            else:
+                st.error("Delete Failed")
+
+        else:
+            st.info("No Teacher Found")

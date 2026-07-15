@@ -1,4 +1,5 @@
 import streamlit as st
+from auth.login import normalize_text
 import pandas as pd
 from database.student_db import save_student_profile
 from database.student_db import (

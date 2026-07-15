@@ -2,6 +2,13 @@ from database.db import get_connection
 from auth.auth_service import authenticate_user
 import re
 import streamlit as st
+#=================================================================================================
+#normlize
+#===============================================================================================
+def normalize_text(text):
+    if text is None:
+        return None
+    return text.strip().lower()
 #===========================================
 #use gif
 #=============================================

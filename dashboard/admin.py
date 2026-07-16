@@ -1,6 +1,6 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
-
+import plotly.express as px
 
 
 
@@ -17,7 +17,11 @@ import pandas as pd
 from database.dashboard_db import (
     get_dashboard_counts,
     get_recent_activity,
-    get_students_by_department
+    get_students_by_department,
+    get_monthly_registration,
+    get_students_by_gender
+
+
 )
 def dashboard_home():
     counts = get_dashboard_counts()
@@ -25,32 +29,128 @@ def dashboard_home():
     c1, c2, c3 = st.columns(3)
 
     with c1:
-        st.metric("🎓 Students", counts["students"])
+        st.metric("Students", counts["students"])
 
     with c2:
-        st.metric("👨‍🏫 Teachers", counts["teachers"])
+        st.metric("Teachers", counts["teachers"])
 
     with c3:
-        st.metric("👨‍👩‍👧 Parents", counts["parents"])
+        st.metric("Parents", counts["parents"])
     dept = get_students_by_department()
-#department graph
-#---------------
-    df = pd.DataFrame(
-    dept,
-    columns=["Department", "Students"]
+    if dept:
+        df = pd.DataFrame(
+        dept,
+        columns=["Department", "Students"]
+        )
+    else:
+          st.info("No department data available.")
+
+
+    fig1 = px.bar(
+    df,
+    x="Department",
+    y="Students",
+    color="Students",
+    text="Students",
+    title=" Department Wise Students",
+    template="plotly_white"
 )
 
-    st.bar_chart(df.set_index("Department"))
-    #recent activity
+    fig1.update_traces(textposition="outside")
+    fig1.update_layout(height=400)
+
+
+    gender = get_students_by_gender()
+    if gender:
+        gender_df = pd.DataFrame(
+        gender,
+        columns=["Gender", "Students"])
+
+        fig2 = px.pie(
+    gender_df,
+    values="Students",
+    names="Gender",
+    hole=0.5,
+    title="Gender Distribution"
+)
+        fig2.update_traces(textinfo="percent+label")
+        fig2.update_layout(height=400)
+
+    else:
+        st.info("No gender data available.")
+    fig1.update_layout(
+    height=400,
+    xaxis_title="Department",
+    yaxis_title="Students",
+    showlegend=False
+)
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.plotly_chart(fig1, use_container_width=True)
+
+    with col2:
+        st.plotly_chart(fig2, use_container_width=True)
+
+    st.subheader(" Recent Activity")
+
     activity = get_recent_activity()
 
     df = pd.DataFrame(
     activity,
-    columns=["Action", "Module", "Time"]
+    columns=["Action","Module","Time"]
 )
 
-    st.dataframe(df, use_container_width=True)
+    st.dataframe(
+    df,
+    use_container_width=True,
+    hide_index=True
+)
+    registration = get_monthly_registration()
+    if registration:
+        reg_df = pd.DataFrame(
+        registration,
+        columns=["Month","Students"]
+)
+        fig3 = px.line(
+    reg_df,
+    x="Month",
+    y="Students",
+    markers=True,
+    title=" Monthly Registrations"
+)
+        st.plotly_chart(fig3, use_container_width=True)
+    else:
+        st.info("No registration data available.")
+    st.dataframe(
+    df,
+    use_container_width=True,
+    hide_index=True,
+    height=250
+)
     
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

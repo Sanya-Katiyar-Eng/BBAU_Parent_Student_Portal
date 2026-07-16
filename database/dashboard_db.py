@@ -60,3 +60,49 @@ def get_students_by_department():
     conn.close()
 
     return data
+
+
+
+
+def get_students_by_gender():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT gender, COUNT(*)
+        FROM students
+        GROUP BY gender
+        ORDER BY gender;
+    """)
+
+    data = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return data
+
+
+
+def get_monthly_registration():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT
+            TO_CHAR(created_at,'Mon') AS month,
+            COUNT(*)
+        FROM students
+        GROUP BY
+            EXTRACT(MONTH FROM created_at),
+            TO_CHAR(created_at,'Mon')
+        ORDER BY
+            EXTRACT(MONTH FROM created_at);
+    """)
+
+    data = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return data

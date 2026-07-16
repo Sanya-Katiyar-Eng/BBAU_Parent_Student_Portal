@@ -1,7 +1,52 @@
 import streamlit as st
 from auth.login import add_bg_gif
-add_bg_gif()
+st.markdown("""
+<style>
 
+/* Main page text */
+html, body, [class*="css"] {
+    color: black !important;
+}
+
+/* Labels */
+label, .stMarkdown, .stText, p, h1, h2, h3, h4, h5, h6 {
+    color: black !important;
+    font-weight: 600;
+}
+
+/* Text Input */
+.stTextInput label {
+    color: black !important;
+}
+
+/* Selectbox */
+.stSelectbox label {
+    color: black !important;
+}
+
+/* Checkbox */
+.stCheckbox label {
+    color: black !important;
+}
+
+/* Radio */
+.stRadio label {
+    color: black !important;
+}
+
+/* Form labels */
+[data-testid="stWidgetLabel"] {
+    color: black !important;
+    font-weight: bold;
+}
+
+/* Sidebar (optional) */
+section[data-testid="stSidebar"] * {
+    color: black !important;
+}
+
+</style>
+""", unsafe_allow_html=True)
 
 
 

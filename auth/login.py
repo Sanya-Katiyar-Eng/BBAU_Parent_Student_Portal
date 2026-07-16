@@ -80,18 +80,26 @@ if "activate_user_id" not in st.session_state:
 # ==========================================================
 
 def show_login():
+    add_bg_gif()
+    col1, col2, col3 = st.columns([2,1,2])
+    with col2:
+        st.image("images/bbau logo.jpg", width=170)
 
-    st.image("images/bbau logo.jpg", width=170)
-
-    st.markdown(
-        """
-        <h2 style='text-align:center;color:#0B5ED7'>
+        st.markdown(
+    """
+    <p style="
+        text-align:center;
+        color:black;
+        font-size:20px;
+        font-weight:600;
+        margin-top:-10px;
+        margin-bottom:20px;
+        font-family:Arial, sans-serif;">
         BBAU Student Parent Portal
-        </h2>
-        """,
-        unsafe_allow_html=True
-    )
-
+    </p>
+    """,
+    unsafe_allow_html=True
+)
     role = st.selectbox(
         "Login As",
         [

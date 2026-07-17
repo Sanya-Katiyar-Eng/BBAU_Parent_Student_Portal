@@ -156,7 +156,6 @@ def dashboard_home():
 
 # ===========================
 # Admin Dashboard
-# ===========================
 
 def admin_dashboard():
      # ---------------- Header ----------------

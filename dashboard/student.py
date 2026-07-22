@@ -9,6 +9,8 @@ from database.student_db import (
     delete_student,
        get_student_by_enrollment,
 )
+
+from database.parent_db import create_parent_from_student
 def student_page():
 
     st.title(" Student Management")
@@ -459,6 +461,9 @@ def student_profile_form():
     )
 
         if success:
+            create_parent_from_student(
+        st.session_state.user_id
+    )
 
             st.success("Profile Completed Successfully.")
 

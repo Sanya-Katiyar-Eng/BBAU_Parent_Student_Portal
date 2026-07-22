@@ -6,12 +6,11 @@ import plotly.express as px
 
 
 
-
 from dashboard.student import student_page
 from dashboard.teacher import teacher_page
-from dashboard.parent import parent_page
 from dashboard.reports import report_page
 from dashboard.settings import settings_page
+from dashboard.parent import parent_page
 import pandas as pd
 
 from database.dashboard_db import (

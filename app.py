@@ -56,7 +56,7 @@ section[data-testid="stSidebar"] * {
 from auth.login import authentication
 from dashboard.admin import admin_dashboard
 from dashboard.student import student_dashboard,dashboard_home
-# from dashboard.parent import parent_dashboard
+#from dashboard.parent import parent_page
 
 from dashboard.student import student_profile_form,dashboard_home
 from database.student_db import get_registration_status
@@ -143,10 +143,8 @@ def dashboard_router():
         student_dashboard()
 
     elif role == "parent":
-
-        st.write("Parent Dashboard")
-
-        # parent_dashboard()
+        print("Parent role detected")
+        #parent_page()
 
     else:
 

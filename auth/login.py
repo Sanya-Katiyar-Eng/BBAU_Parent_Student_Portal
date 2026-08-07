@@ -104,8 +104,10 @@ def show_login():
         "Login As",
         [
             "Admin",
+            "Teacher",
             "Student",
             "Parent"
+
         ]
     )
 
@@ -114,6 +116,8 @@ def show_login():
     if role == "Admin":
 
         username = st.text_input("Email")
+    elif role == "Teacher":
+        username = st.text_input(" Email")
 
     elif role == "Student":
 
@@ -154,6 +158,12 @@ def show_login():
             st.session_state.logged_in = True
             st.session_state.user_id = user["user_id"]
             st.session_state.role = user["role"]
+            st.session_state.email = user["email"]
+
+    # Parent Login
+            if user["role"].lower() == "parent":
+                st.session_state.parent_id = user["parent_id"]
+                st.session_state.student_id = user["student_id"]
 
             st.rerun()
 

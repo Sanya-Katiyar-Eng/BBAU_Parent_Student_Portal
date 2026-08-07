@@ -1305,5 +1305,4 @@ def clear_parent_form():
 
 
 def refresh_parent_table():
-
-    st.rerun()
+    pass

@@ -56,11 +56,11 @@ section[data-testid="stSidebar"] * {
 from auth.login import authentication
 from dashboard.admin import admin_dashboard
 from dashboard.student import student_dashboard,dashboard_home
-#from dashboard.parent import parent_page
+from dashboard.parent_dash import parent_home
 
 from dashboard.student import student_profile_form,dashboard_home
 from database.student_db import get_registration_status
-
+from dashboard.teacher import teacher_dashboard
 if "auth_page" not in st.session_state:
     st.session_state.auth_page = "login"
 
@@ -73,7 +73,6 @@ if "activate_user_id" not in st.session_state:
 st.set_page_config(
     
     page_title="BBAU Student Parent Portal",
-    page_icon="🎓",
     layout="wide"
 )
 # ==========================================================
@@ -142,9 +141,13 @@ def dashboard_router():
 
         student_dashboard()
 
+    elif role == "teacher":
+        teacher_dashboard()
+
+
     elif role == "parent":
         print("Parent role detected")
-        #parent_page()
+        parent_home()
 
     else:
 

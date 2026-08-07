@@ -1,6 +1,5 @@
 from database.db import get_connection
 
-from database.db import get_connection
 
 
 
@@ -1261,9 +1260,275 @@ def upload_parent_photo(parent_id, photo_path):
         conn.close()
 
 #=================================================================================================
+#Prent page db
+#=============================================================================================================
+from database.db import get_connection
+
+
+def get_parent_dashboard(parent_id):
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    query = """
+        SELECT
+            s.student_id,
+            s.student_name,
+            s.enrollment_no,
+            s.department,
+            s.semester,
+            s.roll_no,
+            s.status,
+            s.account_status,
+
+            p.father_name,
+            p.mother_name,
+            p.phone,
+            p.email
+
+        FROM parents p
+        INNER JOIN students s
+            ON p.student_id = s.student_id
+
+        WHERE p.parent_id = %s
+        LIMIT 1;
+    """
+
+    cur.execute(query, (parent_id,))
+    data = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    return data
+
+#=====================================================================================================================
+#
+#===========================================================================================================
+from database.db import get_connection
+import streamlit as st
+
+
+def get_parent_profile():
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    user_id = st.session_state.user_id
+
+
+
+    # Check parent table
+    cur.execute("""
+        SELECT *
+        FROM parents
+        WHERE parent_id = %s
+    """, (user_id,))
+
+    parent = cur.fetchone()
+    print("Parent Table :", parent)
+
+    # Check student table
+    cur.execute("""
+        SELECT *
+        FROM students
+        WHERE student_id = %s
+    """, (st.session_state.student_id,))
+
+    student = cur.fetchone()
+    print("Student Table :", student)
+
+    # Original Query
+    query = """
+        SELECT
+
+            p.parent_id,
+            p.student_id,
+
+            p.father_name,
+            p.mother_name,
+            p.occupation,
+            p.phone,
+            p.email,
+            p.address,
+
+            s.student_name,
+            s.roll_no,
+            s.enrollment_no,
+            s.department,
+            s.semester,
+            s.gender,
+            s.dob,
+            s.blood_group,
+            s.email,
+            s.phone,
+            s.address,
+            s.city,
+            s.state,
+            s.pincode,
+            s.photo,
+            s.status,
+            s.account_status
+
+        FROM parents p
+
+        INNER JOIN students s
+            ON p.student_id = s.student_id
+
+        WHERE p.parent_id = %s
+    """
+
+    cur.execute(query, (user_id,))
+    profile = cur.fetchone()
+
+    print("Final Query :", profile)
+
+    cur.close()
+    conn.close()
+
+    return profile
+
+
+
+def get_child_attendance_summary(student_id):
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+
+        SELECT
+
+            COUNT(*) FILTER (WHERE status='Present'),
+
+            COUNT(*) FILTER (WHERE status='Absent'),
+
+            COUNT(*)
+
+        FROM attendance
+
+        WHERE student_id=%s
+
+    """,(student_id,))
+
+    present, absent, total = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    present = present or 0
+    absent = absent or 0
+    total = total or 0
+
+    percentage = 0
+
+    if total > 0:
+        percentage = round((present/total)*100,2)
+
+    return {
+
+        "present":present,
+        "absent":absent,
+        "total":total,
+        "percentage":percentage
+
+    }
+
+from datetime import date
+
+def get_child_today_attendance(student_id):
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+
+        SELECT
+
+            c.course_name,
+            a.status
+
+        FROM attendance a
+
+        JOIN courses c
+
+        ON c.course_id=a.course_id
+
+        WHERE
+
+            a.student_id=%s
+
+            AND attendance_date=%s
+
+    """,(student_id,date.today()))
+
+    data=cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return data
+
+def get_child_attendance_history(student_id):
+
+    conn=get_connection()
+    cur=conn.cursor()
+
+    cur.execute("""
+
+        SELECT
+
+            attendance_date,
+            c.course_name,
+            status
+
+        FROM attendance a
+
+        JOIN courses c
+
+        ON c.course_id=a.course_id
+
+        WHERE student_id=%s
+
+        ORDER BY attendance_date DESC
+
+    """,(student_id,))
+
+    data=cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return data
+#=================================================================================================
 #
 #=============================================================================================================
 
+def get_student_attendance():
+    pass
+#=====================================================================================================================
+#
+#===========================================================================================================
+def get_student_results():
+    pass
+
+
+#=================================================================================================
+#
+#=============================================================================================================
+def get_student_assignments():
+    pass
+#=====================================================================================================================
+#
+#===========================================================================================================
+def get_parent_notices():
+    pass
+
+#=================================================================================================
+#
+#=============================================================================================================
+def get_student_timetable():
+    pass
 
 #=====================================================================================================================
 #
@@ -1272,40 +1537,6 @@ def upload_parent_photo(parent_id, photo_path):
 
 
 #=================================================================================================
-#
-#=============================================================================================================
-
-
-#=====================================================================================================================
-#
-#===========================================================================================================
-
-
-
-#=================================================================================================
-#
-#=============================================================================================================
-
-
-#=====================================================================================================================
-#
-#===========================================================================================================
-
-
-
-#=================================================================================================
-#
-#=============================================================================================================
-
-
-#=====================================================================================================================
-#
-#===========================================================================================================
-
-
-
-#=================================================================================================
-#
 #=============================================================================================================
 
 

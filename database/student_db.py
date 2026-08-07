@@ -546,6 +546,189 @@ def get_student_dashboard(user_id):
         conn.close()
 
 
+
+
+from database.db import get_connection
+import streamlit as st
+
+
+def get_student_attendance():
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    student_id = st.session_state.student_id
+
+    query = """
+        SELECT
+
+            a.attendance_date,
+            c.course_code,
+            c.course_name,
+            a.status,
+            t.teacher_name,
+            COALESCE(a.remarks,'')
+
+        FROM attendance a
+
+        INNER JOIN courses c
+            ON a.course_id = c.course_id
+
+        LEFT JOIN teachers t
+            ON a.marked_by = t.teacher_id
+
+        WHERE
+            a.student_id = %s
+
+        ORDER BY
+            a.attendance_date DESC,
+            c.course_name;
+    """
+
+    cur.execute(query, (student_id,))
+
+    attendance = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return attendance
+
+def get_students_by_course(course_id):
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT 
+            s.student_id,
+            s.student_name,
+            s.enrollment_number
+        FROM students s
+        JOIN student_courses sc
+        ON s.student_id = sc.student_id
+        WHERE sc.course_id = %s
+    """,(course_id,))
+
+    students = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return students
+
+def get_student_attendance_summary(student_id):
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+
+        SELECT
+
+            COUNT(*) FILTER(WHERE status='Present'),
+
+            COUNT(*) FILTER(WHERE status='Absent'),
+
+            COUNT(*)
+
+        FROM attendance
+
+        WHERE student_id=%s
+
+    """,(student_id,))
+
+    present, absent, total = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    present = present or 0
+    absent = absent or 0
+    total = total or 0
+
+    percentage = 0
+
+    if total > 0:
+        percentage = round((present/total)*100,2)
+
+    return {
+
+        "present":present,
+        "absent":absent,
+        "total":total,
+        "percentage":percentage
+
+    }
+
+from datetime import date
+
+def get_today_attendance(student_id):
+
+    conn=get_connection()
+    cur=conn.cursor()
+
+    cur.execute("""
+
+        SELECT
+
+            c.course_name,
+            a.status
+
+        FROM attendance a
+
+        JOIN courses c
+
+        ON a.course_id=c.course_id
+
+        WHERE
+
+            student_id=%s
+
+            AND attendance_date=%s
+
+    """,(student_id,date.today()))
+
+    data=cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return data
+
+def get_student_attendance_history(student_id):
+
+    conn=get_connection()
+    cur=conn.cursor()
+
+    cur.execute("""
+
+        SELECT
+
+            attendance_date,
+
+            c.course_name,
+
+            status
+
+        FROM attendance a
+
+        JOIN courses c
+
+        ON a.course_id=c.course_id
+
+        WHERE student_id=%s
+
+        ORDER BY attendance_date DESC
+
+    """,(student_id,))
+
+    data=cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return data
 # ==========================================================
 # FUTURE MODULES
 # These functions will be connected after Teacher/Admin

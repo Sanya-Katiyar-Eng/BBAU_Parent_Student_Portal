@@ -2,12 +2,13 @@ import streamlit as st
 from streamlit_option_menu import option_menu
 import plotly.express as px
 
-
-
-
-
+from database.dashboard_db import (
+    get_all_students,
+    get_all_courses,
+    assign_student_to_course
+)
 from dashboard.student import student_page
-from dashboard.teacher import teacher_page
+from dashboard.teacher import teacher_page,assign_course_page
 from dashboard.reports import report_page
 from dashboard.settings import settings_page
 from dashboard.parent import parent_page
@@ -18,7 +19,8 @@ from database.dashboard_db import (
     get_recent_activity,
     get_students_by_department,
     get_monthly_registration,
-    get_students_by_gender
+    get_students_by_gender,
+    get_all_courses
 
 
 )
@@ -228,6 +230,8 @@ def admin_dashboard():
 
                 "Courses",
 
+                "Assign Student Course",
+
                 "Attendance",
 
                 "Results",
@@ -312,6 +316,12 @@ def admin_dashboard():
     elif selected == "Parents":
 
         parent_page()
+    elif selected=="Assign Student Course":
+
+        assign_student_course_page()
+    elif selected == "Courses":
+
+        assign_course_page()
 
     elif selected == "Reports":
 
@@ -329,7 +339,59 @@ def admin_dashboard():
 
 
 
+def assign_student_course_page():
 
+    st.subheader("Assign Student To Course")
+
+
+    students = get_all_students()
+    courses = get_all_courses()
+
+
+    if not students:
+        st.warning("No Students Found")
+        return
+
+
+    if not courses:
+        st.warning("No Courses Found")
+        return
+
+
+    student = st.selectbox(
+        "Student",
+        students,
+        format_func=lambda x:f"{x[1]} ({x[2]})"
+    )
+
+
+    course = st.selectbox(
+        "Course",
+        courses,
+        format_func=lambda x: x[1]
+    )
+
+
+    if st.button("Assign Course"):
+
+
+        success = assign_student_to_course(
+
+            student_id=student[0],
+            course_id=course[0]
+
+        )
+
+
+        if success:
+            st.success(
+                "Student Assigned Successfully"
+            )
+
+        else:
+            st.error(
+                "Already Assigned / Failed"
+            )
 
 
 

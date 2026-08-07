@@ -136,17 +136,18 @@ def verify_login(login_username, password, role):
         cur.execute("""
             SELECT
                 id,
+                login_username,
                 password,
                 role,
                 first_login,
                 account_status
             FROM users
             WHERE
-                login_username = %s
-                AND role = %s
+                LOWER(login_username)=LOWER(%s)
+                AND LOWER(role)=LOWER(%s)
         """, (
             login_username,
-            role.lower()
+            role
         ))
 
         user = cur.fetchone()
@@ -158,49 +159,83 @@ def verify_login(login_username, password, role):
             }
 
         user_id = user[0]
-        db_password = user[1]
-        db_role = user[2]
-        first_login = user[3]
-        account_status = user[4]
+        email = user[1]
+        db_password = user[2]
+        db_role = user[3]
+        first_login = user[4]
+        account_status = user[5]
 
-        # Account Status Check
         if account_status.lower() != "active":
             return {
                 "success": False,
                 "message": "Account is inactive."
             }
 
-        # First Login
         if first_login:
             return {
                 "success": False,
                 "first_login": True,
                 "user_id": user_id,
+                "email": email,
                 "message": "Activate your account."
             }
 
-        # Password Verification
         if db_password == password:
             password_valid = True
         else:
             password_valid = check_password_hash(db_password, password)
+
         if not password_valid:
             return {
                 "success": False,
                 "message": "Invalid Password."
             }
+        parent_id = None
+        student_id = None
+        if db_role.lower() == "parent":
 
-        # Login Success
+            cur.execute("""
+        SELECT parent_id, student_id
+        FROM parents
+        WHERE parent_id = %s
+    """, (user_id,))
+
+            parent = cur.fetchone()
+
+            if parent:
+                parent_id = parent[0]
+                student_id = parent[1]
+
+
         return {
             "success": True,
             "user_id": user_id,
             "role": db_role,
-            "first_login": False
-        }
+            "email": email,
+            "first_login": False,
+            "parent_id": parent_id,
+            "student_id": student_id
+}
 
     finally:
         cur.close()
         conn.close()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
             
             
 

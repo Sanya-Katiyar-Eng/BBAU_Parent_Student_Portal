@@ -1,6 +1,15 @@
 import streamlit as st
+from database.student_db import (
+    get_student_attendance_summary,
+    get_today_attendance,
+    get_student_attendance_history
+)
 from auth.login import normalize_text
 import pandas as pd
+from database.dashboard_db import (
+    get_student_attendance,
+    get_student_attendance_percentage
+)
 from database.student_db import save_student_profile
 from database.student_db import (
     add_student,
@@ -9,6 +18,7 @@ from database.student_db import (
     delete_student,
        get_student_by_enrollment,
 )
+from dashboard.parent_dash import attendance_view
 
 from database.parent_db import create_parent_from_student
 def student_page():
@@ -569,18 +579,52 @@ def courses_page():
 #attendance page
 #=========================================================================================================================
 
-def attendance_page():
+def student_attendance():
+    summary = get_student_attendance_summary(student_id)
 
-    st.title("Attendance")
+    c1,c2,c3,c4 = st.columns(4)
 
-    st.progress(0.92)
+    with c1:
+        st.metric("Present",summary["present"])
+
+    with c2:
+        st.metric("Absent",summary["absent"])
+
+    with c3:
+        st.metric("Total",summary["total"])
+
+    with c4:
+        st.metric("Attendance %",f"{summary['percentage']}%")
+
+    st.divider()
+
+    st.subheader("Today's Attendance")
+
+    today=get_today_attendance(student_id)
+
+    if today:
+
+        for row in today:
+
+            st.write(
+            f"📘 {row[0]} : **{row[1]}**"
+        )
+
+    else:
+
+        st.info("No attendance marked today.")
+
+    st.divider()
+
+    st.subheader("Attendance History")
+
+    history=get_student_attendance_history(student_id)
 
     st.dataframe(
-        {
-            "Subject":["Python","DBMS","ML"],
-            "Attendance":["95%","88%","93%"]
-        }
-    )
+    history,
+    use_container_width=True
+)
+    
 
 
 #========================================================================================================================================

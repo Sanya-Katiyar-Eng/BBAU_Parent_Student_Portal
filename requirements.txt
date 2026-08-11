@@ -1,3 +1,7 @@
 streamlit
-python-dotenv
 psycopg2-binary
+python-dotenv
+werkzeug
+pandas
+pillow
+twilio

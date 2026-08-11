@@ -1,7 +1,12 @@
 streamlit
+streamlit-option-menu
 psycopg2-binary
 python-dotenv
 werkzeug
 pandas
-pillow
+numpy
+Pillow
 twilio
+requests
+matplotlib
+seaborn

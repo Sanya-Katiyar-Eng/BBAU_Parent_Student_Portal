@@ -211,25 +211,41 @@ def get_all_teachers():
     return teachers
 
 def get_recent_activity():
-
     conn = get_connection()
     cur = conn.cursor()
 
-    cur.execute("""
-        SELECT
-            activity,
-            created_at
-        FROM activity_logs
-        ORDER BY created_at DESC
-        LIMIT 10
-    """)
+    try:
+        cur.execute("""
+            SELECT
+                action AS activity,
+                module,
+                created_at
+            FROM public.activity_logs
+            ORDER BY created_at DESC
+            LIMIT 10
+        """)
 
-    data = cur.fetchall()
+        rows = cur.fetchall()
 
-    cur.close()
-    conn.close()
+        return [
+            {
+                "activity_id": row[0],
+                "user_id": row[1],
+                "activity": row[2],
+                "module": row[3],
+                "created_at": row[4]
+            }
+            for row in rows
+        ]
 
-    return data
+    except Exception as e:
+        print("GET RECENT ACTIVITY ERROR:", e)
+        return []
+
+    finally:
+        cur.close()
+        conn.close()
+
 
 
 

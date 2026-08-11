@@ -124,15 +124,17 @@ def create_password(user_id, new_password):
 # Verify Login Password
 # ==========================================================
 
+
 from werkzeug.security import check_password_hash
 
-def verify_login(login_username, password, role):
 
+
+def verify_login(login_username, password, role):
     conn = get_connection()
     cur = conn.cursor()
 
     try:
-
+        # Find user
         cur.execute("""
             SELECT
                 id,
@@ -141,10 +143,10 @@ def verify_login(login_username, password, role):
                 role,
                 first_login,
                 account_status
-            FROM users
+            FROM public.users
             WHERE
-                LOWER(login_username)=LOWER(%s)
-                AND LOWER(role)=LOWER(%s)
+                LOWER(login_username) = LOWER(%s)
+                AND LOWER(role) = LOWER(%s)
         """, (
             login_username,
             role
@@ -152,12 +154,14 @@ def verify_login(login_username, password, role):
 
         user = cur.fetchone()
 
+        # User not found
         if user is None:
             return {
                 "success": False,
                 "message": "User not found."
             }
 
+        # Get user data
         user_id = user[0]
         email = user[1]
         db_password = user[2]
@@ -165,12 +169,14 @@ def verify_login(login_username, password, role):
         first_login = user[4]
         account_status = user[5]
 
-        if account_status.lower() != "active":
+        # Check account status
+        if account_status and account_status.lower() != "active":
             return {
                 "success": False,
                 "message": "Account is inactive."
             }
 
+        # Check first login
         if first_login:
             return {
                 "success": False,
@@ -180,25 +186,36 @@ def verify_login(login_username, password, role):
                 "message": "Activate your account."
             }
 
+        # Check password
         if db_password == password:
             password_valid = True
         else:
-            password_valid = check_password_hash(db_password, password)
+            try:
+                password_valid = check_password_hash(
+                    db_password,
+                    password
+                )
+            except Exception:
+                password_valid = False
 
         if not password_valid:
             return {
                 "success": False,
                 "message": "Invalid Password."
             }
+
+        # Parent information
         parent_id = None
         student_id = None
-        if db_role.lower() == "parent":
 
+        if db_role.lower() == "parent":
             cur.execute("""
-        SELECT parent_id, student_id
-        FROM parents
-        WHERE parent_id = %s
-    """, (user_id,))
+                SELECT
+                    parent_id,
+                    student_id
+                FROM public.parents
+                WHERE parent_id = %s
+            """, (user_id,))
 
             parent = cur.fetchone()
 
@@ -206,7 +223,7 @@ def verify_login(login_username, password, role):
                 parent_id = parent[0]
                 student_id = parent[1]
 
-
+        # Successful login
         return {
             "success": True,
             "user_id": user_id,
@@ -215,7 +232,15 @@ def verify_login(login_username, password, role):
             "first_login": False,
             "parent_id": parent_id,
             "student_id": student_id
-}
+        }
+
+    except Exception as e:
+        print("LOGIN ERROR:", e)
+
+        return {
+            "success": False,
+            "message": "Something went wrong during login."
+        }
 
     finally:
         cur.close()

@@ -2263,33 +2263,6 @@ def get_assignment_progress(teacher_id):
 
 
 
-def get_recent_activity():
-
-    conn=get_connection()
-    cur=conn.cursor()
-
-    cur.execute("""
-
-    SELECT
-    activity,
-    created_at
-
-    FROM activity_logs
-
-    ORDER BY created_at DESC
-
-    LIMIT 10
-
-    """)
-
-    data=cur.fetchall()
-
-    conn.close()
-
-    return data
-
-
-
 def get_attendance_by_date(course_id, attendance_date):
 
     conn = get_connection()

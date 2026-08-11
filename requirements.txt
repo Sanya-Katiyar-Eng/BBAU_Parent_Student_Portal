@@ -10,3 +10,4 @@ twilio
 requests
 matplotlib
 seaborn
+plotly

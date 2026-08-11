@@ -1,7 +1,6 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
 import plotly.express as px
-
 from database.dashboard_db import (
     get_all_students,
     get_all_courses,

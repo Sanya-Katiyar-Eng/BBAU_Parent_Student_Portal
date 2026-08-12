@@ -4,6 +4,7 @@ from database.student_db import (
     get_today_attendance,
     get_student_attendance_history
 )
+
 from auth.login import normalize_text
 import pandas as pd
 from database.dashboard_db import (
@@ -18,7 +19,6 @@ from database.student_db import (
     delete_student,
        get_student_by_enrollment,
 )
-from dashboard.parent_dash import attendance_view
 
 from database.parent_db import create_parent_from_student
 def student_page():
@@ -354,7 +354,7 @@ def student_dashboard():
         timetable_page()
 
     elif selected == "Attendance":
-        attendance_page()
+        student_attendance()
 
     elif selected == "Results":
         results_page()
@@ -580,53 +580,39 @@ def courses_page():
 #=========================================================================================================================
 
 def student_attendance():
-    summary = get_student_attendance_summary(student_id)
 
-    c1,c2,c3,c4 = st.columns(4)
+    student_id = st.session_state.get("user_id")
 
-    with c1:
-        st.metric("Present",summary["present"])
+    if not student_id:
+        st.error("Student information not found. Please login again.")
+        return
 
-    with c2:
-        st.metric("Absent",summary["absent"])
+    st.markdown("## My Attendance")
+    st.caption("Attendance history for the current 5 days")
 
-    with c3:
-        st.metric("Total",summary["total"])
+    attendance = get_student_attendance_history(student_id)
 
-    with c4:
-        st.metric("Attendance %",f"{summary['percentage']}%")
+    if not attendance:
+        st.info("No attendance records found for the current 5 days.")
+        return
 
-    st.divider()
-
-    st.subheader("Today's Attendance")
-
-    today=get_today_attendance(student_id)
-
-    if today:
-
-        for row in today:
-
-            st.write(
-            f"📘 {row[0]} : **{row[1]}**"
+    for record in attendance:
+        attendance_date, course_name, status = record
+        if status == "Present":
+            st.success(
+            f"🟢 **{attendance_date.strftime('%d %b %Y')}**  |  "
+            f"**{course_name}**  |  **Present**"
+        )
+        else:
+            st.error(
+            f"🔴 **{attendance_date.strftime('%d %b %Y')}**  |  "
+            f"**{course_name}**  |  **Absent**"
         )
 
-    else:
-
-        st.info("No attendance marked today.")
-
-    st.divider()
-
-    st.subheader("Attendance History")
-
-    history=get_student_attendance_history(student_id)
-
-    st.dataframe(
-    history,
-    use_container_width=True
-)
-    
 
 
+
+        
 #========================================================================================================================================
 #result page
 #========================================================================================================================================

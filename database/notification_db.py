@@ -27,31 +27,3 @@ def send_parent_email(parent_email, student_name, course_name, attendance_date):
 
     return True
 
-def send_parent_sms(phone, name, course, attendance):
-
-    try:
-        phone = str(phone)
-
-        if not phone.startswith("+91"):
-            phone = "+91" + phone
-
-        text = f"""
-        Dear Parent {name},
-        Your child is absent in {course}.
-        """
-
-        message = client.messages.create(
-            body=text,
-            from_=TWILIO_NUMBER,
-            to=phone
-        )
-
-        print("Message SID:", message.sid)
-        print("Status:", message.status)
-
-        return True
-
-    except Exception as e:
-        st.error(f"SMS ERROR: {e}")
-        print("SMS ERROR:", e)
-        return False

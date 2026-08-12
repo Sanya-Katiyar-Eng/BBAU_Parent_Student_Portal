@@ -1471,13 +1471,11 @@ def get_child_today_attendance(student_id):
 
 def get_child_attendance_history(student_id):
 
-    conn=get_connection()
-    cur=conn.cursor()
+    conn = get_connection()
+    cur = conn.cursor()
 
     cur.execute("""
-
         SELECT
-
             attendance_date,
             c.course_name,
             status
@@ -1485,16 +1483,17 @@ def get_child_attendance_history(student_id):
         FROM attendance a
 
         JOIN courses c
+            ON c.course_id = a.course_id
 
-        ON c.course_id=a.course_id
-
-        WHERE student_id=%s
+        WHERE a.student_id = %s
 
         ORDER BY attendance_date DESC
 
-    """,(student_id,))
+        LIMIT 5
 
-    data=cur.fetchall()
+    """, (student_id,))
+
+    data = cur.fetchall()
 
     cur.close()
     conn.close()

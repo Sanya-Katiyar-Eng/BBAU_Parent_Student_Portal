@@ -1203,12 +1203,21 @@ def get_attendance(
 
 
 from database.db import get_connection
+
 def get_all_teachers():
     conn = get_connection()
     cur = conn.cursor()
 
     cur.execute("""
-        SELECT teacher_id, teacher_name
+        SELECT
+            teacher_id,
+            teacher_name,
+            employee_id,
+            department,
+            designation,
+            phone,
+            email,
+            status
         FROM teachers
         ORDER BY teacher_name;
     """)
@@ -1219,7 +1228,6 @@ def get_all_teachers():
     conn.close()
 
     return teachers
-
 
 
 
@@ -2469,6 +2477,32 @@ def export_attendance(course_id, attendance_date):
 
 
 
+
+
+
+
+from database.db import get_connection
+
+
+def get_teacher_statistics():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT
+            COUNT(*) AS total_teachers,
+            COUNT(*) FILTER (WHERE LOWER(status) = 'active') AS active_teachers,
+            COUNT(*) FILTER (WHERE LOWER(status) = 'inactive') AS inactive_teachers,
+            COUNT(DISTINCT department) AS total_departments
+        FROM teachers;
+    """)
+
+    result = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    return result
 
 
 

@@ -27,13 +27,12 @@ import pandas as pd
 import streamlit as st
 
 
-def attendance_view(title):
+def attendance_view():
 
-    st.title(title)
     st.divider()
     student_id = st.session_state.user_id
 
-    attendance = get_student_attendance(student_id)
+    attendance = get_student_attendance()
 
 
     if not attendance:
@@ -78,6 +77,7 @@ def attendance_view(title):
         use_container_width=True,
         hide_index=True
     )
+    
 def parent_home():
 
     # ==========================
@@ -319,24 +319,57 @@ def parent_profile():
         st.write("**Email:**", parent_email)
 
     st.info(f"🏠 {parent_address}")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def parent_attendance():
+
+    # Get child/student ID from session
+    student_id = st.session_state.get("student_id")
+
+    if not student_id:
+        st.error("Student information not found.")
+        return
+
+    # =========================
+    # Attendance Summary
+    # =========================
+
     summary = get_child_attendance_summary(student_id)
 
-    c1,c2,c3,c4 = st.columns(4)
+    c1, c2, c3, c4 = st.columns(4)
 
     with c1:
-        st.metric("Present",summary["present"])
+        st.metric("Present", summary["present"])
 
     with c2:
-        st.metric("Absent",summary["absent"])
+        st.metric("Absent", summary["absent"])
 
     with c3:
-        st.metric("Total",summary["total"])
+        st.metric("Total", summary["total"])
 
     with c4:
-        st.metric("Attendance %",f"{summary['percentage']}%")
+        st.metric(
+            "Attendance %",
+            f"{summary['percentage']}%"
+        )
 
     st.divider()
+
+    # =========================
+    # Today's Attendance
+    # =========================
 
     st.subheader("Today's Attendance")
 
@@ -347,27 +380,59 @@ def parent_attendance():
         for row in today:
 
             if row[1] == "Present":
-
-                st.success(f"{row[0]} : Present")
-
+                st.success(
+                    f"🟢 {row[0]} : Present"
+                )
             else:
-
-                st.error(f"{row[0]} : Absent")
+                st.error(
+                    f"🔴 {row[0]} : Absent"
+                )
 
     else:
-
-        st.info("Attendance not marked today.")
+        st.info(
+            "Attendance not marked today."
+        )
 
     st.divider()
 
-    st.subheader("Attendance History")
+    # =========================
+    # Attendance History
+    # =========================
+
+    st.subheader("📋 Attendance History")
 
     history = get_child_attendance_history(student_id)
 
-    st.dataframe(
-    history,
-    use_container_width=True
-)
+    if history:
+
+        for attendance_date, course_name, status in history:
+
+            formatted_date = attendance_date.strftime(
+                "%d %b %Y"
+            )
+            col1, col2 = st.columns([4, 1])
+            with col1:
+                st.markdown(f"**{course_name}**")
+                st.caption(f"📅 {formatted_date}")
+            with col2:
+                if status == "Present":
+                    st.success("🟢 Present")
+                else:
+                    st.error("🔴 Absent")
+            st.divider()
+    else:
+        st.info("No attendance history found.")
+
+
+
+
+
+
+
+
+
+
+
 def parent_results():
 
     st.title(" Results")
@@ -375,6 +440,23 @@ def parent_results():
     result = get_student_results()
 
     st.dataframe(result)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def parent_assignments():
 
     st.title(" Assignments")
@@ -382,6 +464,24 @@ def parent_assignments():
     assignments = get_student_assignments()
 
     st.dataframe(assignments)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def parent_notices():
 
     st.title(" Notices")
@@ -389,6 +489,22 @@ def parent_notices():
     notices = get_parent_notices()
 
     st.dataframe(notices)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def parent_timetable():
 
     st.title(" Timetable")

@@ -661,6 +661,38 @@ def get_student_attendance_summary(student_id):
 
     }
 
+def get_student_attendance_history(student_id):
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT
+            a.attendance_date,
+            c.course_name,
+            a.status
+        FROM attendance a
+
+        INNER JOIN courses c
+            ON a.course_id = c.course_id
+
+        WHERE
+            a.student_id = %s
+
+        ORDER BY
+            a.attendance_date DESC,
+            c.course_name
+
+        LIMIT 5
+    """, (student_id,))
+
+    records = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return records
+
 from datetime import date
 
 def get_today_attendance(student_id):
@@ -696,39 +728,6 @@ def get_today_attendance(student_id):
 
     return data
 
-def get_student_attendance_history(student_id):
-
-    conn=get_connection()
-    cur=conn.cursor()
-
-    cur.execute("""
-
-        SELECT
-
-            attendance_date,
-
-            c.course_name,
-
-            status
-
-        FROM attendance a
-
-        JOIN courses c
-
-        ON a.course_id=c.course_id
-
-        WHERE student_id=%s
-
-        ORDER BY attendance_date DESC
-
-    """,(student_id,))
-
-    data=cur.fetchall()
-
-    cur.close()
-    conn.close()
-
-    return data
 # ==========================================================
 # FUTURE MODULES
 # These functions will be connected after Teacher/Admin

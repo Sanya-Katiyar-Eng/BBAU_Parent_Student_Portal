@@ -1,10 +1,10 @@
 
 import streamlit as st
+from database.teacher_db import get_teacher_statistics
 from database.dashboard_db import get_parent_details
 
 from database.notification_db import (
     send_parent_email,
-    send_parent_sms
 )
 import pandas as pd
 from io import BytesIO
@@ -15,6 +15,7 @@ from database.teacher_db import (
     get_attendance_for_edit,
     update_attendance
 )
+from Service.sms_service import send_attendance_sms
 from database.teacher_db import get_attendance_by_date
 from database.dashboard_db import get_students_by_course
 from datetime import datetime
@@ -56,20 +57,20 @@ def teacher_page():
     st.markdown("---")
 
     # ================= Dashboard Cards ================= #
-
+    total_teachers, active_teachers, inactive_teachers, total_departments = get_teacher_statistics()
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        st.metric("Total Teachers", "0")
+        st.metric("Total Teachers", total_teachers)
 
     with col2:
-        st.metric("Active", "0")
+        st.metric("Active",active_teachers)
 
     with col3:
-        st.metric("Inactive", "0")
+        st.metric("Inactive",inactive_teachers)
 
     with col4:
-        st.metric("Departments", "0")
+        st.metric("Departments",total_departments)
 
     st.markdown("---")
 
@@ -256,14 +257,14 @@ def teacher_page():
 
             for teacher in teachers:
                 data.append({
-    "Teacher ID": teacher["teacher_id"],
-    "Teacher Name": teacher["teacher_name"],
-    "Employee ID": teacher["employee_id"],
-    "Department": teacher["department"],
-    "Designation": teacher["designation"],
-    "Phone": teacher["phone"],
-    "Email": teacher["email"],
-    "Status": teacher["status"]
+          "Teacher ID": teacher[0],
+        "Teacher Name": teacher[1],
+        "Employee ID": teacher[2],
+        "Department": teacher[3],
+        "Designation": teacher[4],
+        "Phone": teacher[5],
+        "Email": teacher[6],
+        "Status": teacher[7]
 })
 
                 st.dataframe(
@@ -352,17 +353,17 @@ def teacher_page():
                 teacher_name = selected.split(" (")[0]
                 employee_id = selected.split("(")[1].replace(")", "")
 
-            if delete_teacher(
+                if delete_teacher(
             teacher_name,
             employee_id
         ):
-                st.success("Teacher Deleted Successfully")
-                st.rerun()
-            else:
-                st.error("Delete Failed")
+                    st.success("Teacher Deleted Successfully")
+                    st.rerun()
+                else:
+                    st.error("Delete Failed")
 
-        else:
-            st.info("No Teacher Found")
+            else:
+                st.info("No Teacher Found")
 
 
 
@@ -1104,27 +1105,25 @@ def teacher_attendance():
 
                 st.success("Attendance saved successfully.")
                 for row in attendance_data:
-                    if row["status"]=="Absent":
-                        parent=get_parent_details(
-                            row["student_id"]
+                    parent=get_parent_details(
+                        row["student_id"]
                         )
-                        st.write("Parent Data:", parent)
+                    st.write("Parent Data:", parent)
 
-                        if parent:
-                            sms_result=send_parent_sms(
-                                parent[0],
-                                parent[2],
+                    if parent:
+                        phone = parent[0]
+                        parent_name = parent[2]
+
+
+                        sms_result=send_attendance_sms(
+                                phone,
+                                parent_name,
                                 selected_course["Course Name"],
-                                attendance_data
+                                row["status"]
                             )
                             
-                            st.write("SMS Status:", sms_result)
-                            send_parent_email(
-                                parent[1],
-                                parent[2],
-                                selected_course["Course Name"],
-                                attendance_data
-                            )
+                        st.write("SMS Status:", sms_result)
+            
 
                 history = get_attendance_by_date(
         selected_course["Course ID"],

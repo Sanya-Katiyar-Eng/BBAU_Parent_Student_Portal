@@ -1,2 +1,5 @@
 .env
 __pycache__
+*.json
+*.pyc
+bbau-student-parent-portal-firebase-adminsdk-fbsvc-bc468310ea.json

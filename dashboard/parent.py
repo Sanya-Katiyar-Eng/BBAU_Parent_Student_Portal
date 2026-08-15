@@ -79,7 +79,7 @@ def parent_login(phone,password):
 
 def parent_page():
 
-    st.title("👨‍👩‍👧 Parent Management System")
+    st.title("Parent Management")
 
 
     parent_dashboard_cards()
@@ -90,9 +90,9 @@ def parent_page():
 
     tab1, tab2, tab3= st.tabs(
         [
-            "👀 View Parents",
-            "✏ Update Parent",
-            "🗑 Delete Parent"
+            " View Parents",
+            " Update Parent",
+            " Delete Parent"
         ]
     )
 
@@ -109,6 +109,14 @@ def parent_page():
 
     with tab3:
         delete_parent_tab()
+
+
+
+
+
+
+
+
 
 
 

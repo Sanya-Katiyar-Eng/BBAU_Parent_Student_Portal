@@ -158,183 +158,362 @@ def dashboard_home():
 # Admin Dashboard
 
 def admin_dashboard():
-     # ---------------- Header ----------------
+
+    # ======================================================
+    # ADMIN UI STYLE
+    # ======================================================
+
     st.markdown("""
-    <div style="
-        background:linear-gradient(90deg,#2563EB,#1E40AF);
-        padding:20px;
-        border-radius:15px;
-        color:white;
-        margin-bottom:20px;
-    ">
-
-    <h2>🎓 BBAU Student Parent Portal</h2>
-
-    <p>Administrator Dashboard</p>
-
-    </div>
-    """, unsafe_allow_html=True)
-
-    # ---------------- Sidebar ----------------
-
-    with st.sidebar:
-
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        st.image(
-            "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
-            width=90
-        )
-
-        st.markdown(
-            """
-            <h3 style='text-align:center;margin-bottom:0px;'>
-            Sanya
-            </h3>
-
-            <p style='text-align:center;color:gray;'>
-            Administrator
-            </p>
-            """,
-            unsafe_allow_html=True
-        )
-
-        st.divider()
-        st.markdown("""
 <style>
+/* ---------- MAIN BACKGROUND ---------- */
+.stApp {
+    background: radial-gradient(circle at 0% 0%, rgba(33,150,243,.08), transparent 30%), #f5f8fc;
+}
+
+.block-container {
+    padding-top: 28px !important;
+}
+
+/* ---------- SIDEBAR ---------- */
 [data-testid="stSidebar"] {
-    overflow-y: auto;
+    background: linear-gradient(180deg, #f9fcff 0%, #edf5fd 100%);
+    border-right: 1px solid #dce8f5;
 }
 
 [data-testid="stSidebarContent"] {
-    overflow-y: auto;
-    height: 100vh;
+    padding-top: 15px;
+}
+
+/* ---------- BBAU BRAND & ANIMATIONS ---------- */
+.bbau-brand {
+    text-align: center;
+    color: #0d47a1;
+    font-size: 25px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    animation: fadeInDown 0.8s ease-out;
+}
+
+.portal-brand {
+    text-align: center;
+    color: #8192a5;
+    font-size: 11px;
+    margin-top: 2px;
+    animation: fadeIn 1s ease-out;
+}
+
+/* ---------- PROFILE BOX ---------- */
+.profile-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin: 8px 0 10px 0;
+    animation: fadeIn 1s ease-out;
+}
+
+.profile-icon {
+    width: 58px;
+    height: 58px;
+    min-width: 58px;
+    border-radius: 50%;
+    background: #e7f1fb;
+    border: 3px solid white;
+    box-shadow: 0 7px 18px rgba(25,118,210,.18);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.profile-icon:hover {
+    transform: scale(1.06);
+    box-shadow: 0 10px 22px rgba(25,118,210,.28);
+}
+
+.profile-icon .head {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #71869a;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.profile-icon .body {
+    position: absolute;
+    width: 36px;
+    height: 25px;
+    border-radius: 20px 20px 7px 7px;
+    background: #71869a;
+    bottom: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.profile-name {
+    color: #263f59;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+/* ---------- MENU HOVER & ANIMATIONS ---------- */
+[data-testid="stSidebar"] .nav-link {
+    color: #40566f !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    margin: 4px 6px !important;
+    padding: 11px 13px !important;
+    border-radius: 11px !important;
+    transition: all 0.3s ease !important;
+}
+
+[data-testid="stSidebar"] .nav-link:hover {
+    background: #e3f1ff !important;
+    color: #1565c0 !important;
+    transform: translateX(5px) !important;
+}
+
+[data-testid="stSidebar"] .nav-link-selected {
+    background: linear-gradient(135deg, #0d47a1, #1976d2) !important;
+    color: white !important;
+    box-shadow: 0 6px 18px rgba(25,118,210,.20) !important;
+    transform: scale(1.02) !important;
+}
+
+/* ---------- SIDEBAR BUTTON ---------- */
+[data-testid="stSidebar"] .stButton > button {
+    border-radius: 10px !important;
+    background: white !important;
+    color: #40566f !important;
+    border: 1px solid #d7e5f3 !important;
+    font-weight: 650 !important;
+    transition: all 0.25s ease !important;
+}
+
+[data-testid="stSidebar"] .stButton > button:hover {
+    background: #eaf4ff !important;
+    color: #1565c0 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(25,118,210,.12);
+}
+
+/* ---------- WELCOME CARD & KEYFRAMES ---------- */
+.welcome-card {
+    background: linear-gradient(135deg, #0d47a1, #1976d2, #42a5f5);
+    border-radius: 22px;
+    padding: 30px;
+    margin-bottom: 25px;
+    box-shadow: 0 12px 30px rgba(25,118,210,.20);
+    position: relative;
+    overflow: hidden;
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.welcome-card:after {
+    content: "";
+    position: absolute;
+    width: 180px;
+    height: 180px;
+    right: -60px;
+    top: -80px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.10);
+    animation: glow 4s ease-in-out infinite;
+}
+
+@keyframes glow {
+    0%, 100% { transform: scale(.85); }
+    50% { transform: scale(1.15); }
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.welcome-title {
+    color: white;
+    font-size: 30px;
+    font-weight: 800;
+    position: relative;
+    z-index: 2;
+}
+
+.welcome-subtitle {
+    color: rgba(255,255,255,.88);
+    font-size: 14px;
+    margin-top: 7px;
+    position: relative;
+    z-index: 2;
+}
+
+[data-testid="stMetric"] {
+    background: white;
+    border: 1px solid #e1eaf3;
+    border-radius: 16px;
+    padding: 15px;
+    box-shadow: 0 5px 20px rgba(40,80,120,.06);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+[data-testid="stMetric"]:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(40,80,120,.12);
 }
 </style>
 """, unsafe_allow_html=True)
 
+    # ======================================================
+    # SIDEBAR
+    # ======================================================
+
+    with st.sidebar:
+        st.markdown('<div class="bbau-brand">BBAU</div>', unsafe_allow_html=True)
+        st.markdown('<div class="portal-brand">Student Parent Portal</div>', unsafe_allow_html=True)
+        st.divider()
+
+        # ==================================================
+        # PROFILE
+        # ==================================================
+        st.markdown("""
+<div class="profile-box">
+    <div class="profile-icon">
+        <div class="head"></div>
+        <div class="body"></div>
+    </div>
+    <div class="profile-name">Sanya</div>
+</div>
+""", unsafe_allow_html=True)
+
+        st.divider()
+
+        # ==================================================
+        # MENU
+        # ==================================================
         selected = option_menu(
-
             menu_title=None,
-
             options=[
-
                 "Dashboard",
-
                 "Students",
-
                 "Teachers",
-
                 "Parents",
-
                 "Courses",
-
                 "Assign Student Course",
-
-                "Attendance",
-
-                "Results",
-
                 "Reports",
-
                 "Settings"
-
             ],
-
+            icons=[
+                "grid-fill",
+                "people-fill",
+                "person-badge-fill",
+                "house-door-fill",
+                "journal-bookmark-fill",
+                "pencil-square",
+                "calendar-check-fill",
+                "trophy-fill",
+                "file-bar-graph-fill",
+                "gear-fill"
+            ],
             default_index=0,
-
             styles={
-
                 "container": {
-
                     "padding": "0px",
-
-                    "background-color": "#D6DFF3",
-
+                    "background-color": "transparent"
                 },
-
-
                 "nav-link": {
-
-                    "font-size": "16px",
-
+                    "font-size": "14px",
                     "text-align": "left",
-
-                    "margin": "6px",
-
-                    "padding": "12px",
-
-                    "border-radius": "10px",
-
-                    "--hover-color": "#BFC7D4",
-
+                    "margin": "4px 6px",
+                    "padding": "11px 13px",
+                    "border-radius": "11px",
+                    "color": "#40566f",
+                    "--hover-color": "#e3f1ff"
                 },
-
                 "nav-link-selected": {
-
-                    "background-color": "#9AA3B6",
-
-                    "color": "white",
-
-                },
-
+                    "background-color": "#1976D2",
+                    "color": "white"
+                }
             }
-
         )
 
         st.divider()
 
-        st.markdown("### 🟢 Database Status")
-
+        # ==================================================
+        # STATUS & NOTIFICATIONS
+        # ==================================================
+        st.markdown("### DATABASE STATUS")
         st.success("Connected")
 
-        st.markdown("### 🔔 Notifications")
+        st.markdown("### NOTIFICATIONS")
+        st.info("You're all caught up")
 
         st.divider()
 
-        if st.button("🚪 Logout", use_container_width=True):
-
+        # ==================================================
+        # LOGOUT
+        # ==================================================
+        if st.button("Logout", use_container_width=True, key="admin_logout_button"):
             st.session_state.clear()
-
             st.rerun()
 
-    # ---------------- Main Area ----------------
+    # ======================================================
+    # MAIN PAGE CONTENT
+    # ======================================================
+    st.markdown("""
+<div class="welcome-card">
+    <div class="welcome-title">Welcome Admin</div>
+    <div class="welcome-subtitle">Manage your university portal from one place</div>
+</div>
+""", unsafe_allow_html=True)
 
+    # ======================================================
+    # ROUTING LOGIC
+    # ======================================================
     if selected == "Dashboard":
-
         dashboard_home()
-
     elif selected == "Students":
-
         student_page()
-
     elif selected == "Teachers":
-
         teacher_page()
-
     elif selected == "Parents":
-
         parent_page()
-    elif selected=="Assign Student Course":
-
-        assign_student_course_page()
     elif selected == "Courses":
-
         assign_course_page()
-
+    elif selected == "Assign Student Course":
+        assign_student_course_page()
     elif selected == "Reports":
-
         report_page()
-
     elif selected == "Settings":
-
         settings_page()
-
     else:
-
         st.title(selected)
-
         st.info(f"{selected} module is under development.")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

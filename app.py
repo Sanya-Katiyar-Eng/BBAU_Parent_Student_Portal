@@ -1,5 +1,4 @@
 import streamlit as st
-from auth.login import add_bg_gif
 st.markdown("""
 <style>
 

@@ -22,60 +22,128 @@ from database.student_db import (
     delete_student,
        get_student_by_enrollment,
 )
-
 from database.parent_db import create_parent_from_student
-import streamlit as st
 import pandas as pd
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 def student_page():
     # =====================================================
-    # SIMPLE LIGHT BLUE CSS
+    # PROFESSIONAL LIGHT BLUE CSS
     # =====================================================
     st.markdown("""
-        <style>
-        /* Smooth Entrance */
-        .simple-container {
-            animation: fadeIn 0.3s ease-in-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(4px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+<style>
+/* Smooth Entrance Animation */
+.simple-container {
+    animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 
-        /* Top Action Buttons - Light Blue */
-        div[data-testid="column"] div.stButton > button {
-            border-radius: 8px !important;
-            background-color: #f0f9ff !important;
-            color: #0284c7 !important;
-            border: 1px solid #bae6fd !important;
-            font-weight: 500 !important;
-            transition: all 0.2s ease !important;
-        }
-        
-        div[data-testid="column"] div.stButton > button:hover {
-            background-color: #e0f2fe !important;
-            border-color: #38bdf8 !important;
-            color: #0369a1 !important;
-        }
+/* Navigation Action Buttons */
+div[data-testid="column"] div.stButton > button {
+    border-radius: 10px !important;
+    background-color: #f0f9ff !important;
+    color: #0284c7 !important;
+    border: 1px solid #bae6fd !important;
+    font-weight: 600 !important;
+    padding: 10px 16px !important;
+    transition: all 0.25s ease !important;
+    box-shadow: 0 2px 4px rgba(2, 132, 199, 0.04) !important;
+}
 
-        /* Metric Blue Accent */
-        [data-testid="stMetricValue"] {
-            color: #0284c7 !important;
-            font-weight: 600 !important;
-        }
+div[data-testid="column"] div.stButton > button:hover {
+    background-color: #e0f2fe !important;
+    border-color: #38bdf8 !important;
+    color: #0369a1 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 10px rgba(2, 132, 199, 0.12) !important;
+}
 
-        /* Submit Button */
-        div.stForm button[type="submit"] {
-            background-color: #0284c7 !important;
-            color: white !important;
-            border-radius: 6px !important;
-            border: none !important;
-        }
-        div.stForm button[type="submit"]:hover {
-            background-color: #0369a1 !important;
-        }
-        </style>
-    """, unsafe_allow_html=True)
+/* Metric Card Accent & Styling */
+[data-testid="stMetric"] {
+    background-color: #ffffff !important;
+    border: 1px solid #e0f2fe !important;
+    border-radius: 12px !important;
+    padding: 14px 18px !important;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+[data-testid="stMetric"]:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06) !important;
+}
+
+[data-testid="stMetricValue"] {
+    color: #0284c7 !important;
+    font-weight: 700 !important;
+    font-size: 26px !important;
+}
+
+[data-testid="stMetricLabel"] {
+    color: #64748b !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+}
+
+/* Form Submit Button */
+div.stForm button[type="submit"] {
+    background-color: #0284c7 !important;
+    color: white !important;
+    border-radius: 8px !important;
+    border: none !important;
+    font-weight: 600 !important;
+    padding: 10px 20px !important;
+    transition: background-color 0.2s ease, transform 0.1s ease !important;
+}
+
+div.stForm button[type="submit"]:hover {
+    background-color: #0369a1 !important;
+    transform: translateY(-1px);
+}
+
+/* Clean Input Fields */
+input[type="text"] {
+    border-radius: 8px !important;
+}
+
+/* Table Card Styling */
+div[data-testid="stDataFrame"] {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+}
+</style>
+""", unsafe_allow_html=True)
 
     # =====================================================
     # SESSION STATES INITIALIZATION
@@ -90,26 +158,26 @@ def student_page():
         st.session_state.delete_student_data = None
 
     # Page Header
-    st.title("👨‍🎓 Student Management")
+    st.title("Student Management")
     st.caption("Manage student records, directory, and profile setups")
     st.divider()
 
     # Navigation Buttons
     c1, c2, c3 = st.columns(3)
     with c1:
-        if st.button("➕ Add Student", use_container_width=True):
+        if st.button("Add Student", use_container_width=True):
             st.session_state.show_add_form = True
             st.session_state.show_view_students = False
             st.session_state.show_delete_student = False
 
     with c2:
-        if st.button("📋 View Students", use_container_width=True):
+        if st.button("View Students", use_container_width=True):
             st.session_state.show_view_students = True
             st.session_state.show_add_form = False
             st.session_state.show_delete_student = False
 
     with c3:
-        if st.button("🗑️ Delete Student", use_container_width=True):
+        if st.button("Delete Student", use_container_width=True):
             st.session_state.show_delete_student = True
             st.session_state.show_add_form = False
             st.session_state.show_view_students = False
@@ -179,14 +247,14 @@ def student_page():
             total, completed, pending, active = 0, 0, 0, 0
 
         m1, m2, m3, m4 = st.columns(4)
-        m1.metric("Total", total)
+        m1.metric("Total Students", total)
         m2.metric("Profile Completed", completed)
         m3.metric("Pending Profile", pending)
-        m4.metric("Active", active)
+        m4.metric("Active Status", active)
 
         st.divider()
 
-        search = st.text_input("🔍 Search Student (Name, Enrollment, Roll No)")
+        search = st.text_input("Search Directory (Name, Enrollment, Roll No)")
 
         f1, f2, f3, f4 = st.columns(4)
         with f1:
@@ -234,7 +302,7 @@ def student_page():
         with col1:
             enrollment = st.text_input("Enter Student Enrollment Number", placeholder="e.g. BBAU/2026/1024")
         with col2:
-            if st.button("Search Student", use_container_width=True):
+            if st.button("Search Record", use_container_width=True):
                 if enrollment.strip():
                     st.session_state.delete_student_data = get_student_by_enrollment(enrollment.strip())
                 else:
@@ -251,7 +319,7 @@ def student_page():
             st.write(f"**Department:** {student[4]}")
             st.write(f"**Semester:** {student[5]}")
 
-            st.warning("⚠️ Warning: Deleting this record is permanent.")
+            st.warning("Warning: Deleting this record is permanent.")
             confirm = st.checkbox("Confirm permanent deletion of this student record.")
 
             if confirm:
@@ -280,11 +348,22 @@ def student_page():
 
 
 
-import streamlit as st
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 from streamlit_option_menu import option_menu
 
-import streamlit as st
-from streamlit_option_menu import option_menu
 
 def student_dashboard():
     # =====================================================
@@ -1088,9 +1167,8 @@ def student_timetable():
 
 
 from datetime import datetime, time
-import streamlit as st
 
-import streamlit as st
+
 
 def student_timetable():
     # =====================================================
@@ -1244,9 +1322,6 @@ def student_timetable():
 
 
 
-import time
-from datetime import datetime, date
-import streamlit as st
 
 def student_assignments(student_id):
 
@@ -1482,7 +1557,7 @@ def student_assignments(student_id):
 
 
 
-import streamlit as st
+
 
 def student_courses(student_id):
 
@@ -1693,8 +1768,6 @@ def student_courses(student_id):
 
 
 
-from datetime import datetime, date
-import streamlit as st
 
 def student_profile(student_id):
 

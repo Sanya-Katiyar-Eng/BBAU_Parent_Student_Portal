@@ -361,11 +361,24 @@ def teacher_page():
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 # =====================================
 # Teacher Dashboard Controller
 # =====================================
 
-def teacher_dashboard():
+'''def teacher_dashboard():
     
 
 
@@ -489,7 +502,206 @@ def teacher_dashboard():
         "Logout Successfully"
     )
 
+        st.rerun()'''
+
+import streamlit as st
+
+def teacher_dashboard():
+    # Authentication Check
+    if (
+        "logged_in" not in st.session_state
+        or not st.session_state.logged_in
+        or st.session_state.role.lower() != "teacher"
+    ):
+        st.warning("Please login as Teacher")
+        st.stop()
+
+    # =====================================================
+    # HIGH CONTRAST & CLEAR VISIBILITY THEME (LIGHT & BLUE)
+    # =====================================================
+    st.markdown("""
+<style>
+/* Main Background */
+.stApp {
+    background-color: #f1f5f9;
+}
+
+/* Sidebar Clean Background */
+section[data-testid="stSidebar"] {
+    background-color: #ffffff !important;
+    border-right: 2px solid #e2e8f0;
+}
+
+/* Profile Card Styling */
+.teacher-profile-card {
+    background: #0f172a;
+    padding: 18px 14px;
+    border-radius: 10px;
+    color: #ffffff;
+    text-align: center;
+    border: 1px solid #1e293b;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+}
+
+.teacher-profile-card h3 {
+    margin: 0 0 6px 0 !important;
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+}
+
+.teacher-profile-card hr {
+    border: 0;
+    height: 1px;
+    background: #334155;
+    margin: 8px 0;
+}
+
+.teacher-profile-card h4 {
+    margin: 4px 0 2px 0 !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: #38bdf8 !important;
+}
+
+.teacher-profile-card p {
+    margin: 2px 0 !important;
+    font-size: 12px !important;
+    color: #cbd5e1 !important;
+}
+
+/* Radio Button Container Styling (Make Buttons Clearly Visible) */
+section[data-testid="stSidebar"] div[role="radiogroup"] > label {
+    background-color: #f8fafc !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    padding: 10px 14px !important;
+    margin-bottom: 8px !important;
+    transition: all 0.2s ease-in-out !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04) !important;
+}
+
+/* Text inside radio options */
+section[data-testid="stSidebar"] div[role="radiogroup"] > label div[data-testid="stMarkdownContainer"] p {
+    color: #1e293b !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+}
+
+/* Hover State */
+section[data-testid="stSidebar"] div[role="radiogroup"] > label:hover {
+    background-color: #e0f2fe !important;
+    border-color: #0284c7 !important;
+    transform: translateX(2px);
+}
+
+/* Active / Selected Radio Button State */
+section[data-testid="stSidebar"] div[role="radiogroup"] > label[data-checked="true"] {
+    background-color: #1e3a8a !important;
+    border-color: #1e3a8a !important;
+}
+
+section[data-testid="stSidebar"] div[role="radiogroup"] > label[data-checked="true"] div[data-testid="stMarkdownContainer"] p {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+    # =====================================================
+    # SIDEBAR PROFILE & NAVIGATION
+    # =====================================================
+    teacher = get_teacher_profile(st.session_state.user_id)
+
+    teacher_name = teacher["teacher_name"] if teacher else "Faculty Member"
+    designation = teacher["designation"] if teacher else "Professor"
+    department = teacher["department"] if teacher else "Academic Dept."
+
+    with st.sidebar:
+        # Profile Header Card
+        st.markdown("""
+<div class="teacher-profile-card">
+    <h3>BBAU Portal</h3>
+    <hr>
+    <h4>{}</h4>
+    <p>{}</p>
+    <p>{}</p>
+</div>
+""".format(
+            teacher_name,
+            designation,
+            department
+        ), unsafe_allow_html=True)
+
+        # Main Navigation Menu
+        menu = st.radio(
+            "",
+            [
+                "Dashboard",
+                "Students",
+                "Attendance",
+                "Courses",
+                "Assignments",
+                "Schedule Class",
+                "Profile",
+                "Logout"
+            ],
+            label_visibility="collapsed"
+        )
+
+    # =====================================================
+    # ROUTING LOGIC
+    # =====================================================
+    if menu == "Dashboard":
+        teacher_home()
+
+    elif menu == "Students":
+        teacher_students()
+
+    elif menu == "Schedule Class":
+        teacher_class_schedule()
+
+    elif menu == "Attendance":
+        teacher_attendance()
+
+    elif menu == "Courses":
+        teacher_courses()
+
+    elif menu == "Assignments":
+        teacher_assignments()
+
+    elif menu == "Profile":
+        teacher_profile()
+
+    elif menu == "Logout":
+        st.session_state.logged_in = False
+        st.session_state.user_id = None
+        st.session_state.role = None
+        st.session_state.teacher_name = None
+
+        st.success("Logout Successfully")
         st.rerun()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -986,7 +1198,7 @@ def teacher_class_schedule():
 
 
 
-def teacher_home():
+'''def teacher_home():
 
     teacher = get_teacher_profile(st.session_state.user_id)
 
@@ -1034,6 +1246,125 @@ def teacher_home():
 
     st.divider()
 
+    show_teacher_activity()'''
+
+
+import streamlit as st
+
+def teacher_home():
+    teacher = get_teacher_profile(st.session_state.user_id)
+
+    if teacher is None:
+        st.error("Teacher profile not found.")
+        return
+
+    teacher_id = teacher["teacher_id"]
+    department = teacher["department"]
+    designation = teacher.get("designation", "")
+    teacher_name = teacher["teacher_name"]
+
+    # =====================================================
+    # PREMIUM SOFT LIGHT THEME (SKY BLUE & WHITE)
+    # =====================================================
+    st.markdown("""
+<style>
+/* Welcome Banner Styling */
+.teacher-welcome-banner {
+    background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%);
+    padding: 24px 28px;
+    border-radius: 16px;
+    border: 1px solid #bae6fd;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.05);
+    margin-bottom: 24px;
+}
+
+.teacher-welcome-banner h2 {
+    margin: 0 0 4px 0 !important;
+    font-size: 26px !important;
+    font-weight: 700 !important;
+    color: #0369a1 !important;
+}
+
+.teacher-welcome-banner .sub-info {
+    margin: 0;
+    font-size: 15px;
+    color: #0284c7;
+    font-weight: 600;
+}
+
+.teacher-welcome-banner .univ-info {
+    margin-top: 6px;
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+/* Dynamic Metric Cards Styling */
+[data-testid="stMetric"] {
+    background-color: #ffffff !important;
+    border: 1px solid #e0f2fe !important;
+    border-radius: 14px !important;
+    padding: 18px 20px !important;
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.03) !important;
+    transition: all 0.25s ease !important;
+}
+
+[data-testid="stMetric"]:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 18px rgba(2, 132, 199, 0.1) !important;
+    border-color: #38bdf8 !important;
+}
+
+[data-testid="stMetricValue"] {
+    color: #0284c7 !important;
+    font-weight: 800 !important;
+    font-size: 28px !important;
+}
+
+[data-testid="stMetricLabel"] {
+    color: #475569 !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+    # =====================================================
+    # WELCOME HEADER BANNER (FETCHED DATA)
+    # =====================================================
+    sub_text = f"{designation} | Department of {department}" if designation else f"Department of {department}"
+    
+    st.markdown("""
+<div class="teacher-welcome-banner">
+    <h2>Welcome back, {}</h2>
+    <p class="sub-info">{}</p>
+    <p class="univ-info">Babasaheb Bhimrao Ambedkar University</p>
+</div>
+""".format(
+        teacher_name,
+        sub_text
+    ), unsafe_allow_html=True)
+
+    # =====================================================
+    # METRICS SECTION (ORIGINAL FETCHED VALUES)
+    # =====================================================
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        st.metric("Students", 1)
+
+    with col2:
+        st.metric("Courses", 0)
+
+    with col3:
+        st.metric("Assignments", 0)
+
+    with col4:
+        st.metric("Results", 0)
+
+    st.divider()
+
+    # Dynamic backend data & activity loader
     show_teacher_activity()
 
 

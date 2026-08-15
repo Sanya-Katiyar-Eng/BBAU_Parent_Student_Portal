@@ -1,39 +1,24 @@
 
 import streamlit as st
-from database.teacher_db import get_teacher_statistics
-from database.dashboard_db import get_parent_details
-
-from database.notification_db import (
-    send_parent_email,
+from database.assignment import (
+    add_assignment,
+    get_teacher_assignments,
+    update_assignment,
+    delete_assignment,
+    add_notice,
+    get_teacher_notices,
+    update_notice,
+    delete_notice
 )
+from database.teacher_db import *
+from database.dashboard_db import *
+from database.timetable_db import *
+from database.notification_db import *
+
+# for assignment........................................................
 import pandas as pd
-from io import BytesIO
 
-from database.teacher_db import export_attendance
-from database.teacher_db import get_attendance_analytics
-from database.teacher_db import (
-    get_attendance_for_edit,
-    update_attendance
-)
-from Service.sms_service import send_attendance_sms
-from database.teacher_db import get_attendance_by_date
-from database.dashboard_db import get_students_by_course
 from datetime import datetime
-from database.teacher_db import add_teacher
-# Teacher Database Functions
-from database.teacher_db import (
-    get_teacher_courses,
-    update_teacher,
-    search_teachers,
-    delete_teacher
-)
-#from database.student_db import get_students_by_course
-
-# Dashboard Database Functions
-from database.dashboard_db import (
-    get_all_courses,
-    get_all_teachers
-)
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
@@ -440,7 +425,6 @@ def teacher_dashboard():
         "Dashboard",
         "Students",
         "Attendance",
-        "Results",
         "Courses",
         "Assignments",
         "Schedule Class",
@@ -466,17 +450,11 @@ def teacher_dashboard():
 
     elif menu == "Schedule Class":
 
-        teacher_schedule()
+        teacher_class_schedule()
 
     elif menu == "Attendance":
 
         teacher_attendance()
-
-
-
-    elif menu == "Results":
-
-        teacher_results()
 
 
 
@@ -551,105 +529,439 @@ def get_student_today_classes(semester):
 # =====================================
 # Teacher Home Dashboard
 # =====================================
+def teacher_class_schedule():
 
+    from datetime import date, datetime
+    import streamlit as st
 
+    st.title("Class Schedule")
 
+    teacher_id = st.session_state.user_id
 
+    st.write("**DEBUG TEACHER ID:**", teacher_id)
 
+    st.divider()
 
+    # =====================================================
+    # SCHEDULE NEW CLASS
+    # =====================================================
 
+    st.subheader("Schedule New Class")
 
+    col1, col2 = st.columns(2)
 
+    # =====================================================
+    # SEMESTER
+    # =====================================================
 
+    with col1:
 
+        semester = st.selectbox(
+            "Semester",
+            [
+                "Semester 1",
+                "Semester 2",
+                "Semester 3",
+                "Semester 4",
+                "Semester 5",
+                "Semester 6",
+                "Semester 7",
+                "Semester 8"
+            ],
+            key="schedule_semester"
+        )
 
-
-
-
-
-
-
-
-
-
-
-
-def teacher_schedule():
-
-    st.title("Schedule Class")
-
-    teacher = get_teacher_profile(st.session_state.user_id)
-
-    if teacher is None:
-        st.error("Teacher profile not found")
-        return
-
-
-    teacher_id = teacher["teacher_id"]
-
-
-    st.subheader("Create New Class")
-
+    # =====================================================
+    # COURSES
+    # =====================================================
 
     courses = get_teacher_courses(teacher_id)
 
+    semester_number = int(
+        semester.replace("Semester ", "").strip()
+    )
 
-    if not courses:
-        st.warning("No courses assigned.")
+    semester_courses = []
+
+    for course in courses:
+
+        try:
+            course_semester = int(
+                str(course["Semester"])
+                .replace("Semester", "")
+                .strip()
+            )
+
+            if course_semester == semester_number:
+                semester_courses.append(course)
+
+        except:
+            continue
+
+    if not semester_courses:
+
+        st.warning(
+            "Is semester ke liye koi course assigned nahi hai."
+        )
+
         return
 
+    with col2:
 
-    course = st.selectbox(
-        "Select Course",
-        courses,
-        format_func=lambda x: x["Course Name"]
+        selected_course = st.selectbox(
+            "Course",
+            semester_courses,
+            format_func=lambda x:
+                f'{x["Course Name"]} ({x["Department"]})',
+            key="schedule_course"
+        )
+
+    # =====================================================
+    # CLASS DATE + DAY
+    # =====================================================
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+
+        class_date = st.date_input(
+            "Class Date",
+            value=date.today(),
+            min_value=date.today(),
+            key="class_date"
+        )
+
+    with col2:
+
+        day_name = class_date.strftime("%A")
+
+        st.text_input(
+            "Day",
+            value=day_name,
+            disabled=True,
+            key="class_day"
+        )
+
+    # =====================================================
+    # TIME
+    # =====================================================
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+
+        start_time = st.time_input(
+            "Start Time (IST)",
+            value=datetime.strptime(
+                "10:00",
+                "%H:%M"
+            ).time(),
+            key="class_start"
+        )
+
+    with col2:
+
+        end_time = st.time_input(
+            "End Time (IST)",
+            value=datetime.strptime(
+                "11:00",
+                "%H:%M"
+            ).time(),
+            key="class_end"
+        )
+
+    # =====================================================
+    # ROOM
+    # =====================================================
+
+    room_no = st.text_input(
+        "Room Number",
+        placeholder="Example: BCA Lab / Room 204",
+        key="class_room"
     )
 
+    st.divider()
 
-    day = st.selectbox(
-        "Select Day",
-        [
-            "Monday",
-            "Tuesday",
-            "Wednesday",
-            "Thursday",
-            "Friday",
-            "Saturday"
-        ]
+    # =====================================================
+    # SCHEDULE CLASS
+    # =====================================================
+
+    if st.button(
+        "Schedule Class",
+        type="primary",
+        use_container_width=True
+    ):
+
+        # -----------------------------------------------
+        # Date validation
+        # -----------------------------------------------
+
+        if class_date < date.today():
+
+            st.error(
+                "Past date par class schedule nahi kar sakte."
+            )
+
+        # -----------------------------------------------
+        # Time validation
+        # -----------------------------------------------
+
+        elif start_time >= end_time:
+
+            st.error(
+                "End time, start time ke baad hona chahiye."
+            )
+
+        else:
+
+            success, message = add_class_schedule(
+
+                teacher_id=teacher_id,
+
+                course_id=selected_course["Course ID"],
+
+                class_date=class_date,
+
+                day_name=day_name,
+
+                start_time=start_time,
+
+                end_time=end_time,
+
+                room_no=room_no,
+
+                semester=semester_number
+            )
+
+            if success:
+
+                st.success(
+                    "Class scheduled successfully."
+                )
+
+                st.rerun()
+
+            else:
+
+                st.error(message)
+
+    # =====================================================
+    # MY CLASS SCHEDULE
+    # =====================================================
+
+    st.divider()
+
+    st.subheader("My Class Schedule")
+
+    schedules = get_teacher_timetable(
+        teacher_id
     )
 
+    if not schedules:
+        st.warning("No classes scheduled yet.")
 
-    start = st.time_input(
-        "Start Time"
-    )
+        st.write("DEBUG: Teacher ID =", teacher_id)
+        st.write("DEBUG: Timetable Data =", schedules)
 
+        return
+    today = date.today()
 
-    end = st.time_input(
-        "End Time"
-    )
+    today_classes = []
+    upcoming_classes = []
 
+    # =====================================================
+    # SEPARATE TODAY / UPCOMING
+    # =====================================================
 
-    room = st.text_input(
-        "Room Number"
-    )
+    for row in schedules:
 
+        class_date = row[1]
 
-    if st.button("Schedule Class"):
+        if class_date == today:
 
-        result = add_class_schedule(
-            teacher_id,
-            course["Course ID"],     # course_id
-            day,
-            start,
-            end,
-            room
+            today_classes.append(row)
+
+        elif class_date > today:
+
+            upcoming_classes.append(row)
+
+    # =====================================================
+    # TODAY
+    # =====================================================
+
+    if today_classes:
+
+        for row in today_classes:
+
+            (
+                timetable_id,
+                class_date,
+                day_name,
+                start_time,
+                end_time,
+                room_no,
+                semester_no,
+                course_id,
+                course_name,
+                course_code
+            ) = row
+
+            st.markdown(
+                f"### 📘 {course_name}"
+            )
+
+            st.write(
+                f"**Course Code:** {course_code}"
+            )
+
+            col1, col2, col3, col4 = st.columns(4)
+
+            with col1:
+
+                st.write(
+                    f" {class_date.strftime('%d-%m-%Y')}"
+                )
+
+            with col2:
+
+                st.write(
+                    f" {start_time.strftime('%I:%M %p')} - "
+                    f"{end_time.strftime('%I:%M %p')}"
+                )
+
+            with col3:
+
+                st.write(
+                    f" {room_no if room_no else 'Room not assigned'}"
+                )
+
+                st.write(
+                    f" Semester {semester_no}"
+                )
+
+            with col4:
+
+                if st.button(
+                    " Delete",
+                    key=f"delete_today_{timetable_id}",
+                    use_container_width=True
+                ):
+
+                    success, message = delete_class_schedule(
+                        timetable_id,
+                        teacher_id
+                    )
+
+                    if success:
+
+                        st.success(message)
+
+                        st.rerun()
+
+                    else:
+
+                        st.error(message)
+
+            st.divider()
+
+    else:
+
+        st.info(
+            "Aaj koi class scheduled nahi hai."
+        )
+
+    # =====================================================
+    # UPCOMING
+    # =====================================================
+
+    st.subheader(" Upcoming Classes")
+
+    if upcoming_classes:
+
+        for row in upcoming_classes:
+
+            (
+                timetable_id,
+                class_date,
+                day_name,
+                start_time,
+                end_time,
+                room_no,
+                semester_no,
+                course_id,
+                course_name,
+                course_code
+            ) = row
+
+            st.markdown(
+                f"###  {course_name}"
+            )
+
+            st.write(
+                f"**Course Code:** {course_code}"
+            )
+
+            col1, col2, col3, col4 = st.columns(4)
+
+            with col1:
+
+                st.write(
+                    f" {class_date.strftime('%d-%m-%Y')}"
+                )
+
+                st.write(
+                    f" {day_name}"
+                )
+
+            with col2:
+
+                st.write(
+                    f" {start_time.strftime('%I:%M %p')} - "
+                    f"{end_time.strftime('%I:%M %p')}"
+                )
+
+            with col3:
+
+                st.write(
+                    f" {room_no if room_no else 'Room not assigned'}"
+                )
+
+                st.write(
+                    f" Semester {semester_no}"
+                )
+
+            with col4:
+
+                if st.button(
+                    " Delete",
+                    key=f"delete_upcoming_{timetable_id}",
+                    use_container_width=True
+                ):
+
+                    success, message = delete_class_schedule(
+                        timetable_id,
+                        teacher_id
+                    )
+
+                    if success:
+
+                        st.success(message)
+
+                        st.rerun()
+
+                    else:
+
+                        st.error(message)
+
+            st.divider()
+
+    else:
+
+        st.info(
+            "Koi upcoming class scheduled nahi hai."
         )
 
 
-        if result:
-            st.success("Class Scheduled Successfully")
-        else:
-            st.error("Failed")
 
 
 
@@ -768,8 +1080,8 @@ Time : {cls[3]} - {cls[4]}
 Room : {cls[5]}
 """
         )
-            else:
-                st.info("No classes scheduled for today.")
+        else:
+            st.info("No classes scheduled for today.")
 
     with right:
 
@@ -1413,95 +1725,1415 @@ def teacher_courses():
 
     else:
         st.info("No courses available.")
-# ================================================================================
-# assignments
-# ========================================================================================= 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def teacher_assignments():
 
-    st.title("Assignments")
+    # ==========================================================
+    # PAGE STYLE
+    # ==========================================================
+
+    st.markdown("""
+    <style>
+
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 3rem;
+    }
+
+    .stButton > button {
+        border-radius: 10px;
+        transition: all 0.25s ease;
+    }
+
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 7px 18px rgba(0,0,0,0.12);
+    }
+
+    button[data-baseweb="tab"] {
+        transition: all 0.25s ease;
+    }
+
+    button[data-baseweb="tab"]:hover {
+        transform: translateY(-2px);
+    }
+
+    </style>
+    """, unsafe_allow_html=True)
+
+
+    # ==========================================================
+    # PAGE HEADER
+    # ==========================================================
+
+    st.title("Academic Work")
+
+    st.caption(
+        "Create, publish and manage assignments, homework, projects and notices."
+    )
+
     st.divider()
 
-    tab1, tab2 = st.tabs(["Add Assignment", "View Assignments"])
 
-    # ==========================
-    # Add Assignment
-    # ==========================
-    with tab1:
+    # ==========================================================
+    # OVERVIEW CARDS
+    # ==========================================================
 
-        col1, col2 = st.columns(2)
+    col1, col2, col3, col4 = st.columns(4)
 
-        with col1:
-            semester = st.selectbox(
-                "Semester",
-                [
-                    "Semester 1",
-                    "Semester 2",
-                    "Semester 3",
-                    "Semester 4",
-                    "Semester 5",
-                    "Semester 6",
-                    "Semester 7",
-                    "Semester 8"
-                ],
-                key="assignment_semester"
+    with col1:
+
+        with st.container(border=True):
+
+            st.subheader("Assignments")
+
+            st.caption(
+                "Academic tasks"
             )
 
-        with col2:
-            courses = get_teacher_courses(
-                st.session_state.user_id
-)
+            st.button(
+                "Create",
+                key="assignment_create_btn",
+                use_container_width=True
+            )
 
-            course = st.selectbox(
-    "Course",
-    courses,
-    format_func=lambda x: x["Course Name"]
-)
-        title = st.text_input("Assignment Title")
 
-        description = st.text_area("Description")
+    with col2:
 
-        due_date = st.date_input("Due Date")
+        with st.container(border=True):
 
-        uploaded_file = st.file_uploader(
-            "Upload Assignment",
-            type=["pdf", "doc", "docx"]
+            st.subheader("Homework")
+
+            st.caption(
+                "Practice work"
+            )
+
+            st.button(
+                "Create",
+                key="homework_create_btn",
+                use_container_width=True
+            )
+
+
+    with col3:
+
+        with st.container(border=True):
+
+            st.subheader("Projects")
+
+            st.caption(
+                "Long-term work"
+            )
+
+            st.button(
+                "Create",
+                key="project_create_btn",
+                use_container_width=True
+            )
+
+
+    with col4:
+
+        with st.container(border=True):
+
+            st.subheader("Notices")
+
+            st.caption(
+                "Important updates"
+            )
+
+            st.button(
+                "Create",
+                key="notice_create_btn",
+                use_container_width=True
+            )
+
+
+    st.write("")
+
+
+    # ==========================================================
+    # TABS
+    # ==========================================================
+
+    create_tab, notice_tab, published_tab = st.tabs(
+        [
+            "Create Academic Work",
+            "Create Notice",
+            "Published Work"
+        ]
+    )
+
+
+    # ==========================================================
+    # CREATE ACADEMIC WORK
+    # ==========================================================
+
+    with create_tab:
+
+        st.subheader(
+            "Create Academic Work"
         )
 
-        if st.button("Save Assignment", use_container_width=True):
-            add_assignment(
-                course["Course ID"],
-                title,
-                description,
-                due_date,
-                uploaded_file,
+        st.caption(
+            "Assign work to a course and define its submission deadline."
+        )
+
+
+        with st.container(border=True):
+
+            # --------------------------------------------------
+            # WORK TYPE
+            # --------------------------------------------------
+
+            work_type = st.selectbox(
+                "Work Type",
+                [
+                    "Assignment",
+                    "Homework",
+                    "Project"
+                ],
+                key="work_type"
+            )
+
+
+            # --------------------------------------------------
+            # SEMESTER + COURSE
+            # --------------------------------------------------
+
+            col1, col2 = st.columns(2)
+
+
+            with col1:
+
+                semester = st.selectbox(
+                    "Semester",
+                    [
+                        "Semester 1",
+                        "Semester 2",
+                        "Semester 3",
+                        "Semester 4",
+                        "Semester 5",
+                        "Semester 6",
+                        "Semester 7",
+                        "Semester 8"
+                    ],
+                    key="academic_semester"
+                )
+
+
+            with col2:
+
+                courses = get_teacher_courses(
+                    st.session_state.user_id
+                )
+
+
+                if courses:
+
+                    course = st.selectbox(
+                        "Course",
+                        courses,
+                        format_func=lambda x: x["Course Name"],
+                        key="academic_course"
+                    )
+
+                else:
+
+                    course = None
+
+                    st.warning(
+                        "No courses are currently assigned to you."
+                    )
+
+
+            # --------------------------------------------------
+            # TITLE
+            # --------------------------------------------------
+
+            title = st.text_input(
+                "Title",
+                placeholder="Enter a clear title"
+            )
+
+
+            # --------------------------------------------------
+            # DESCRIPTION
+            # --------------------------------------------------
+
+            description = st.text_area(
+                "Instructions",
+                placeholder="Write instructions for students...",
+                height=160
+            )
+
+
+            # --------------------------------------------------
+            # DATES
+            # --------------------------------------------------
+
+            col1, col2 = st.columns(2)
+
+
+            with col1:
+
+                assigned_date = st.date_input(
+                    "Assigned Date"
+                )
+
+
+            with col2:
+
+                due_date = st.date_input(
+                    "Submission Deadline"
+                )
+
+
+            # --------------------------------------------------
+            # FILE
+            # --------------------------------------------------
+
+            uploaded_file = st.file_uploader(
+                "Reference File",
+                type=[
+                    "pdf",
+                    "doc",
+                    "docx",
+                    "ppt",
+                    "pptx",
+                    "xls",
+                    "xlsx",
+                    "zip"
+                ]
+            )
+
+
+            if uploaded_file:
+
+                st.success(
+                    f"File attached: {uploaded_file.name}"
+                )
+
+
+            st.divider()
+
+
+            # --------------------------------------------------
+            # PUBLISH
+            # --------------------------------------------------
+
+            if st.button(
+                f"Publish {work_type}",
+                use_container_width=True,
+                type="primary"
+            ):
+
+                if not title.strip():
+
+                    st.warning(
+                        "Please enter a title."
+                    )
+
+                elif course is None:
+
+                    st.warning(
+                        "Please select a course."
+                    )
+
+                elif due_date < assigned_date:
+
+                    st.error(
+                        "Submission deadline cannot be before assigned date."
+                    )
+
+                else:
+
+                    result = add_assignment(
+                        course["Course ID"],
+                        title,
+                        description,
+                        due_date,
+                        uploaded_file,
+                        st.session_state.user_id,
+                        work_type
+                    )
+
+
+                    if result:
+
+                        st.success(
+                            f"{work_type} published successfully."
+                        )
+
+                    else:
+
+                        st.error(
+                            "Unable to publish academic work."
+                        )
+
+
+    # ==========================================================
+    # CREATE NOTICE
+    # ==========================================================
+
+    with notice_tab:
+
+        st.subheader(
+            "Create Notice"
+        )
+
+        st.caption(
+            "Share important information and announcements with students."
+        )
+
+
+        with st.container(border=True):
+
+            # --------------------------------------------------
+            # COURSE
+            # --------------------------------------------------
+
+            notice_courses = get_teacher_courses(
                 st.session_state.user_id
             )
 
-        st.success("Assignment saved successfully.")
 
-    # ==========================
-    # View Assignments
-    # ==========================
-    with tab2:
+            if notice_courses:
 
-        assignments = get_assignments(
+                notice_course = st.selectbox(
+                    "Course",
+                    notice_courses,
+                    format_func=lambda x: x["Course Name"],
+                    key="notice_course"
+                )
+
+            else:
+
+                notice_course = None
+
+                st.warning(
+                    "No courses are currently assigned to you."
+                )
+
+
+            # --------------------------------------------------
+            # NOTICE TYPE
+            # --------------------------------------------------
+
+            notice_type = st.selectbox(
+                "Notice Type",
+                [
+                    "General Notice",
+                    "Vacation Notice",
+                    "Holiday Notice",
+                    "Exam Notice",
+                    "Deadline Reminder",
+                    "Class Announcement",
+                    "Important Information"
+                ],
+                key="notice_type"
+            )
+
+
+            # --------------------------------------------------
+            # NOTICE TITLE
+            # --------------------------------------------------
+
+            notice_title = st.text_input(
+                "Notice Title",
+                placeholder="Example: Vacation Ending Soon",
+                key="notice_title"
+            )
+
+
+            # --------------------------------------------------
+            # MESSAGE
+            # --------------------------------------------------
+
+            notice_message = st.text_area(
+                "Message",
+                placeholder="Write the announcement...",
+                height=180,
+                key="notice_message"
+            )
+
+
+            # --------------------------------------------------
+            # DATES
+            # --------------------------------------------------
+
+            col1, col2 = st.columns(2)
+
+
+            with col1:
+
+                notice_date = st.date_input(
+                    "Published Date",
+                    key="notice_date"
+                )
+
+
+            with col2:
+
+                notice_expiry = st.date_input(
+                    "Expiry Date",
+                    key="notice_expiry"
+                )
+
+
+            # --------------------------------------------------
+            # FILE
+            # --------------------------------------------------
+
+            notice_file = st.file_uploader(
+                "Attachment",
+                type=[
+                    "pdf",
+                    "doc",
+                    "docx",
+                    "jpg",
+                    "jpeg",
+                    "png"
+                ],
+                key="teacher_notice_file"
+            )
+
+
+            if notice_file:
+
+                st.success(
+                    f"File attached: {notice_file.name}"
+                )
+
+
+            st.divider()
+
+
+            # --------------------------------------------------
+            # PUBLISH NOTICE
+            # --------------------------------------------------
+
+            if st.button(
+                "Publish Notice",
+                use_container_width=True,
+                type="primary",
+                key="publish_notice_btn"
+            ):
+
+                if notice_course is None:
+
+                    st.warning(
+                        "Please select a course."
+                    )
+
+                elif not notice_title.strip():
+
+                    st.warning(
+                        "Please enter a notice title."
+                    )
+
+                elif not notice_message.strip():
+
+                    st.warning(
+                        "Please enter the notice message."
+                    )
+
+                elif notice_expiry < notice_date:
+
+                    st.error(
+                        "Expiry date cannot be before published date."
+                    )
+
+                else:
+
+                    result = add_notice(
+                        notice_course["Course ID"],
+                        notice_title,
+                        notice_message,
+                        notice_type,
+                        notice_expiry,
+                        notice_file.name
+                        if notice_file
+                        else None,
+                        st.session_state.user_id
+                    )
+
+
+                    if result:
+
+                        st.success(
+                            "Notice published successfully."
+                        )
+
+                    else:
+
+                        st.error(
+                            "Unable to publish notice."
+                        )
+
+
+    # ==========================================================
+    # PUBLISHED WORK
+    # ==========================================================
+
+    with published_tab:
+
+        st.subheader(
+            "Published Work"
+        )
+
+        st.caption(
+            "Manage assignments, homework and projects created by you."
+        )
+
+
+        # ======================================================
+        # GET ASSIGNMENTS
+        # ======================================================
+
+        assignments = get_teacher_assignments(
             st.session_state.user_id
-)
+        )
+
 
         if assignments:
 
-            st.dataframe(
-                assignments,
-                use_container_width=True,
-                hide_index=True
-            )
+            for assignment in assignments:
+
+                assignment_id = assignment["Assignment ID"]
+
+
+                # ==================================================
+                # ASSIGNMENT CARD
+                # ==================================================
+
+                with st.container(border=True):
+
+                    col1, col2, col3 = st.columns(
+                        [5, 1, 1]
+                    )
+
+
+                    # --------------------------------------------------
+                    # DETAILS
+                    # --------------------------------------------------
+
+                    with col1:
+
+                        st.subheader(
+                            assignment["Title"]
+                        )
+
+                        st.caption(
+                            f"Course: {assignment['Course']}"
+                        )
+
+                        st.write(
+                            assignment["Description"]
+                            if assignment["Description"]
+                            else "No description provided."
+                        )
+
+                        st.write(
+                            f"Type: {assignment['Type']}"
+                        )
+
+                        st.write(
+                            f"Due Date: {assignment['Due Date']}"
+                        )
+
+
+                        if assignment["File"]:
+
+                            st.caption(
+                                f"Attached file: {assignment['File']}"
+                            )
+
+
+                    # --------------------------------------------------
+                    # EDIT BUTTON
+                    # --------------------------------------------------
+
+                    with col2:
+
+                        edit_clicked = st.button(
+                            "Edit",
+                            key=f"edit_{assignment_id}",
+                            use_container_width=True
+                        )
+
+
+                    # --------------------------------------------------
+                    # DELETE BUTTON
+                    # --------------------------------------------------
+
+                    with col3:
+
+                        delete_clicked = st.button(
+                            "Delete",
+                            key=f"delete_{assignment_id}",
+                            use_container_width=True
+                        )
+
+
+                    # ==================================================
+                    # OPEN EDIT MODE
+                    # ==================================================
+
+                    if edit_clicked:
+
+                        st.session_state[
+                            f"editing_{assignment_id}"
+                        ] = True
+
+
+                    # ==================================================
+                    # EDIT FORM
+                    # ==================================================
+
+                    if st.session_state.get(
+                        f"editing_{assignment_id}",
+                        False
+                    ):
+
+                        st.divider()
+
+                        st.subheader(
+                            "Edit Academic Work"
+                        )
+
+
+                        edit_title = st.text_input(
+                            "Title",
+                            value=assignment["Title"],
+                            key=f"title_{assignment_id}"
+                        )
+
+
+                        edit_description = st.text_area(
+                            "Description",
+                            value=assignment["Description"] or "",
+                            height=150,
+                            key=f"description_{assignment_id}"
+                        )
+
+
+                        work_types = [
+                            "Assignment",
+                            "Homework",
+                            "Project"
+                        ]
+
+
+                        current_type = assignment["Type"]
+
+
+                        if current_type not in work_types:
+
+                            current_type = "Assignment"
+
+
+                        edit_type = st.selectbox(
+                            "Work Type",
+                            work_types,
+                            index=work_types.index(
+                                current_type
+                            ),
+                            key=f"type_{assignment_id}"
+                        )
+
+
+                        edit_due_date = st.date_input(
+                            "Due Date",
+                            value=assignment["Due Date"],
+                            key=f"due_{assignment_id}"
+                        )
+
+
+                        edit_file = st.file_uploader(
+                            "Replace File (Optional)",
+                            type=[
+                                "pdf",
+                                "doc",
+                                "docx",
+                                "ppt",
+                                "pptx",
+                                "xls",
+                                "xlsx",
+                                "zip"
+                            ],
+                            key=f"file_{assignment_id}"
+                        )
+
+
+                        save_col, cancel_col = st.columns(2)
+
+
+                        # --------------------------------------------------
+                        # SAVE
+                        # --------------------------------------------------
+
+                        with save_col:
+
+                            if st.button(
+                                "Save Changes",
+                                type="primary",
+                                use_container_width=True,
+                                key=f"save_{assignment_id}"
+                            ):
+
+                                if not edit_title.strip():
+
+                                    st.warning(
+                                        "Title cannot be empty."
+                                    )
+
+                                else:
+
+                                    result = update_assignment(
+                                        assignment_id,
+                                        edit_title,
+                                        edit_description,
+                                        edit_due_date,
+                                        edit_file,
+                                        edit_type
+                                    )
+
+
+                                    if result:
+
+                                        st.success(
+                                            "Academic work updated successfully."
+                                        )
+
+                                        st.session_state[
+                                            f"editing_{assignment_id}"
+                                        ] = False
+
+                                        st.rerun()
+
+                                    else:
+
+                                        st.error(
+                                            "Unable to update academic work."
+                                        )
+
+
+                        # --------------------------------------------------
+                        # CANCEL
+                        # --------------------------------------------------
+
+                        with cancel_col:
+
+                            if st.button(
+                                "Cancel",
+                                use_container_width=True,
+                                key=f"cancel_{assignment_id}"
+                            ):
+
+                                st.session_state[
+                                    f"editing_{assignment_id}"
+                                ] = False
+
+                                st.rerun()
+
+
+                    # ==================================================
+                    # DELETE BUTTON LOGIC
+                    # ==================================================
+
+                    if delete_clicked:
+
+                        st.session_state[
+                            f"confirm_delete_{assignment_id}"
+                        ] = True
+
+
+                    # ==================================================
+                    # DELETE CONFIRMATION
+                    # ==================================================
+
+                    if st.session_state.get(
+                        f"confirm_delete_{assignment_id}",
+                        False
+                    ):
+
+                        st.warning(
+                            "Are you sure you want to delete this academic work?"
+                        )
+
+
+                        confirm_col, cancel_col = st.columns(2)
+
+
+                        # --------------------------------------------------
+                        # CONFIRM DELETE
+                        # --------------------------------------------------
+
+                        with confirm_col:
+
+                            if st.button(
+                                "Yes, Delete",
+                                type="primary",
+                                use_container_width=True,
+                                key=f"confirm_{assignment_id}"
+                            ):
+
+                                result = delete_assignment(
+                                    assignment_id
+                                )
+
+
+                                if result:
+
+                                    st.success(
+                                        "Academic work deleted successfully."
+                                    )
+
+                                    st.session_state[
+                                        f"confirm_delete_{assignment_id}"
+                                    ] = False
+
+                                    st.rerun()
+
+                                else:
+
+                                    st.error(
+                                        "Unable to delete academic work."
+                                    )
+
+
+                        # --------------------------------------------------
+                        # CANCEL DELETE
+                        # --------------------------------------------------
+
+                        with cancel_col:
+
+                            if st.button(
+                                "Cancel",
+                                use_container_width=True,
+                                key=f"cancel_delete_{assignment_id}"
+                            ):
+
+                                st.session_state[
+                                    f"confirm_delete_{assignment_id}"
+                                ] = False
+
+                                st.rerun()
+
 
         else:
-            st.info("No assignments available.")
+
+            st.info(
+                "No academic work has been published yet."
+            )
 
 
-#================================================================================
-# profile
+        # ==========================================================
+        # PUBLISHED NOTICES
+        # ==========================================================
+
+        st.divider()
+
+        st.subheader(
+            "Published Notices"
+        )
+
+        st.caption(
+            "Manage notices and announcements published for students."
+        )
+
+
+        notices = get_teacher_notices(
+            st.session_state.user_id
+        )
+
+
+        if notices:
+
+            for notice in notices:
+
+                notice_id = notice["notice_id"]
+
+
+                # ==================================================
+                # NOTICE CARD
+                # ==================================================
+
+                with st.container(border=True):
+
+                    col1, col2, col3 = st.columns(
+                        [5, 1, 1]
+                    )
+
+
+                    # --------------------------------------------------
+                    # DETAILS
+                    # --------------------------------------------------
+
+                    with col1:
+
+                        st.subheader(
+                            notice["title"]
+                        )
+
+                        st.caption(
+                            f"{notice['notice_type']} • "
+                            f"{notice['course']}"
+                        )
+
+                        st.write(
+                            notice["message"]
+                            if notice["message"]
+                            else "No description provided."
+                        )
+
+                        st.caption(
+                            f"Expiry: {notice['expiry_date']}"
+                        )
+
+
+                    # --------------------------------------------------
+                    # EDIT BUTTON
+                    # --------------------------------------------------
+
+                    with col2:
+
+                        edit_notice_clicked = st.button(
+                            "Edit",
+                            key=f"edit_notice_{notice_id}",
+                            use_container_width=True
+                        )
+
+
+                    # --------------------------------------------------
+                    # DELETE BUTTON
+                    # --------------------------------------------------
+
+                    with col3:
+
+                        delete_notice_clicked = st.button(
+                            "Delete",
+                            key=f"delete_notice_{notice_id}",
+                            use_container_width=True
+                        )
+
+
+                    # ==================================================
+                    # OPEN NOTICE EDIT MODE
+                    # ==================================================
+
+                    if edit_notice_clicked:
+
+                        st.session_state[
+                            f"editing_notice_{notice_id}"
+                        ] = True
+
+
+                    # ==================================================
+                    # NOTICE EDIT FORM
+                    # ==================================================
+
+                    if st.session_state.get(
+                        f"editing_notice_{notice_id}",
+                        False
+                    ):
+
+                        st.divider()
+
+                        st.subheader(
+                            "Edit Notice"
+                        )
+
+
+                        # --------------------------------------------------
+                        # COURSE
+                        # --------------------------------------------------
+
+                        teacher_courses = get_teacher_courses(
+                            st.session_state.user_id
+                        )
+
+
+                        if teacher_courses:
+
+                            course_names = [
+                                c["Course Name"]
+                                for c in teacher_courses
+                            ]
+
+
+                            current_course = notice["course"]
+
+
+                            if current_course in course_names:
+
+                                course_index = course_names.index(
+                                    current_course
+                                )
+
+                            else:
+
+                                course_index = 0
+
+
+                            edit_course = st.selectbox(
+                                "Course",
+                                teacher_courses,
+                                index=course_index,
+                                format_func=lambda x: x["Course Name"],
+                                key=f"notice_course_{notice_id}"
+                            )
+
+                        else:
+
+                            edit_course = None
+
+                            st.warning(
+                                "No courses are assigned to you."
+                            )
+
+
+                        # --------------------------------------------------
+                        # NOTICE TYPE
+                        # --------------------------------------------------
+
+                        notice_types = [
+                            "General Notice",
+                            "Vacation Notice",
+                            "Holiday Notice",
+                            "Exam Notice",
+                            "Deadline Reminder",
+                            "Class Announcement",
+                            "Important Information"
+                        ]
+
+
+                        current_type = notice["notice_type"]
+
+
+                        if current_type in notice_types:
+
+                            type_index = notice_types.index(
+                                current_type
+                            )
+
+                        else:
+
+                            type_index = 0
+
+
+                        edit_notice_type = st.selectbox(
+                            "Notice Type",
+                            notice_types,
+                            index=type_index,
+                            key=f"notice_type_{notice_id}"
+                        )
+
+
+                        # --------------------------------------------------
+                        # TITLE
+                        # --------------------------------------------------
+
+                        edit_notice_title = st.text_input(
+                            "Notice Title",
+                            value=notice["title"],
+                            key=f"notice_title_{notice_id}"
+                        )
+
+
+                        # --------------------------------------------------
+                        # MESSAGE
+                        # --------------------------------------------------
+
+                        edit_notice_description = st.text_area(
+                            "Message",
+                            value=notice["message"] or "",
+                            height=150,
+                            key=f"notice_description_{notice_id}"
+                        )
+
+
+                        # --------------------------------------------------
+                        # EXPIRY DATE
+                        # --------------------------------------------------
+
+                        edit_notice_expiry = st.date_input(
+                            "Expiry Date",
+                            value=notice["expiry_date"],
+                            key=f"notice_expiry_{notice_id}"
+                        )
+
+
+                        # --------------------------------------------------
+                        # FILE
+                        # --------------------------------------------------
+
+                        edit_notice_file = st.file_uploader(
+                            "Replace Attachment (Optional)",
+                            type=[
+                                "pdf",
+                                "doc",
+                                "docx",
+                                "jpg",
+                                "jpeg",
+                                "png"
+                            ],
+                            key=f"notice_file_{notice_id}"
+                        )
+
+
+                        save_col, cancel_col = st.columns(2)
+
+
+                        # ==================================================
+                        # SAVE NOTICE
+                        # ==================================================
+
+                        with save_col:
+
+                            if st.button(
+                                "Save Changes",
+                                type="primary",
+                                use_container_width=True,
+                                key=f"save_notice_{notice_id}"
+                            ):
+
+                                if edit_course is None:
+
+                                    st.warning(
+                                        "Please select a course."
+                                    )
+
+                                elif not edit_notice_title.strip():
+
+                                    st.warning(
+                                        "Please enter a notice title."
+                                    )
+
+                                elif not edit_notice_description.strip():
+
+                                    st.warning(
+                                        "Please enter a notice message."
+                                    )
+
+                                elif (
+                                    edit_notice_expiry
+                                    < notice["created_at"].date()
+                                    if hasattr(
+                                        notice["created_at"],
+                                        "date"
+                                    )
+                                    else False
+                                ):
+
+                                    st.error(
+                                        "Expiry date cannot be before the published date."
+                                    )
+
+                                else:
+
+                                    result = update_notice(
+                                        notice_id,
+                                        edit_course["Course ID"],
+                                        edit_notice_title,
+                                        edit_notice_description,
+                                        edit_notice_type,
+                                        edit_notice_expiry,
+                                        (
+                                            edit_notice_file.name
+                                            if edit_notice_file
+                                            else None
+                                        )
+                                    )
+
+
+                                    if result:
+
+                                        st.success(
+                                            "Notice updated successfully."
+                                        )
+
+                                        st.session_state[
+                                            f"editing_notice_{notice_id}"
+                                        ] = False
+
+                                        st.rerun()
+
+                                    else:
+
+                                        st.error(
+                                            "Unable to update notice."
+                                        )
+
+
+                        # ==================================================
+                        # CANCEL NOTICE EDIT
+                        # ==================================================
+
+                        with cancel_col:
+
+                            if st.button(
+                                "Cancel",
+                                use_container_width=True,
+                                key=f"cancel_notice_{notice_id}"
+                            ):
+
+                                st.session_state[
+                                    f"editing_notice_{notice_id}"
+                                ] = False
+
+                                st.rerun()
+
+
+                    # ==================================================
+                    # DELETE NOTICE
+                    # ==================================================
+
+                    if delete_notice_clicked:
+
+                        st.session_state[
+                            f"confirm_delete_notice_{notice_id}"
+                        ] = True
+
+
+                    # ==================================================
+                    # DELETE NOTICE CONFIRMATION
+                    # ==================================================
+
+                    if st.session_state.get(
+                        f"confirm_delete_notice_{notice_id}",
+                        False
+                    ):
+
+                        st.warning(
+                            "Are you sure you want to delete this notice?"
+                        )
+
+
+                        confirm_col, cancel_col = st.columns(2)
+
+
+                        # --------------------------------------------------
+                        # CONFIRM
+                        # --------------------------------------------------
+
+                        with confirm_col:
+
+                            if st.button(
+                                "Yes, Delete",
+                                type="primary",
+                                use_container_width=True,
+                                key=f"confirm_delete_notice_{notice_id}"
+                            ):
+
+                                result = delete_notice(
+                                    notice_id
+                                )
+
+
+                                if result:
+
+                                    st.success(
+                                        "Notice deleted successfully."
+                                    )
+
+                                    st.session_state[
+                                        f"confirm_delete_notice_{notice_id}"
+                                    ] = False
+
+                                    st.rerun()
+
+                                else:
+
+                                    st.error(
+                                        "Unable to delete notice."
+                                    )
+
+
+                        # --------------------------------------------------
+                        # CANCEL
+                        # --------------------------------------------------
+
+                        with cancel_col:
+
+                            if st.button(
+                                "Cancel",
+                                use_container_width=True,
+                                key=f"cancel_delete_notice_{notice_id}"
+                            ):
+
+                                st.session_state[
+                                    f"confirm_delete_notice_{notice_id}"
+                                ] = False
+
+                                st.rerun()
+
+
+        else:
+
+            st.info(
+                "No notices have been published yet."
+            )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        # profile
 # =========================================================================================
 
 def teacher_profile():
@@ -1673,23 +3305,44 @@ def show_selected_student(student_id):
         }
     )
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def assign_course_page():
 
     st.subheader("Assign Course to Teacher")
 
     teachers = get_all_teachers()
-
     courses = get_all_courses()
 
-    if teachers:
-        teacher = st.selectbox(
+    if not teachers:
+        st.error("No Teacher Found")
+        return
+
+    if not courses:
+        st.error("No Course Found")
+        return
+
+    teacher = st.selectbox(
         "Teacher",
         teachers,
         format_func=lambda x: x[1]
     )
-    else:
-        st.error("No Teacher Found")    
-        
+
     course = st.selectbox(
         "Course",
         courses,
@@ -1698,7 +3351,7 @@ def assign_course_page():
 
     semester = st.selectbox(
         "Semester",
-        [1,2,3,4,5,6,7,8]
+        [1, 2, 3, 4, 5, 6, 7, 8]
     )
 
     session = st.text_input(
@@ -1711,18 +3364,46 @@ def assign_course_page():
         teacher_id = teacher[0]
         course_id = course[0]
 
-        conn = get_connection()
-        cur = conn.cursor()
+        try:
 
-        cur.execute("""
-        UPDATE courses
-        SET teacher_id = %s
-        WHERE course_id = %s
-    """,(teacher_id,course_id))
+            # =====================================
+            # 1. Update course teacher
+            # =====================================
 
-        conn.commit()
+            conn = get_connection()
+            cur = conn.cursor()
 
-        cur.close()
-        conn.close()
+            cur.execute("""
+                UPDATE courses
+                SET teacher_id = %s
+                WHERE course_id = %s
+            """, (
+                teacher_id,
+                course_id
+            ))
 
-        st.success("Course Assigned Successfully")
+            conn.commit()
+
+            cur.close()
+            conn.close()
+
+            # =====================================
+            # 2. Save teacher-course assignment
+            # =====================================
+
+            assign_course(
+                teacher_id,
+                course_id,
+                semester,
+                session
+            )
+
+            st.success(
+                f"Course assigned successfully to Semester {semester}"
+            )
+
+        except Exception as e:
+
+            st.error(
+                f"Error while assigning course: {e}"
+            )

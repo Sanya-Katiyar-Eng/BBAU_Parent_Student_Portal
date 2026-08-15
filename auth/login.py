@@ -2,6 +2,12 @@ from database.db import get_connection
 from auth.auth_service import authenticate_user
 import re
 import streamlit as st
+from database.auth_db import (
+    verify_login,
+    verify_student,
+    create_password
+)
+from database.parent_db import save_parent_fcm_token
 #=================================================================================================
 #normlize
 #===============================================================================================
@@ -164,6 +170,12 @@ def show_login():
             if user["role"].lower() == "parent":
                 st.session_state.parent_id = user["parent_id"]
                 st.session_state.student_id = user["student_id"]
+                token = st.session_state.get("fcm_token")
+                if token:
+                    save_parent_fcm_token(
+                        user["parent_id"],
+                        token
+    )
 
             st.rerun()
 

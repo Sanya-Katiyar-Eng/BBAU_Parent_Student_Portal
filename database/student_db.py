@@ -480,7 +480,7 @@ def save_student_profile(
 # get_student_attendance(user_id)     -> Teacher module se
 # get_student_results(user_id)        -> Teacher module se
 # get_today_classes(user_id)          -> Teacher/Admin module se
-# get_student_assignments(user_id)    -> Teacher module se
+
 # get_student_notices(user_id)        -> Admin/Teacher module se
 
 from database.db import get_connection
@@ -769,27 +769,9 @@ def get_today_attendance(student_id):
 #     pass
 
 
-# def get_student_assignments(user_id):
-#
-#     """
-#     Teacher uploads assignments.
-#
-#     Student can only view/download.
-#     """
-#
-#     pass
+# 
 
-
-# def get_student_notices(user_id):
-#
-#     """
-#     Notices uploaded by
-#     Admin / Teacher.
-#     """
-#
-#     pass
-
-
+# 
 # def get_student_messages(user_id):
 #
 #     """
@@ -813,3 +795,424 @@ def get_today_attendance(student_id):
 #     """
 #
 #     pass
+
+
+
+
+
+
+
+
+
+
+def get_student_timetable(student_id):
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+
+        query = """
+            SELECT
+                t.timetable_id,
+                t.day_name,
+                t.start_time,
+                t.end_time,
+                t.room_no,
+                t.semester,
+                c.course_code,
+                c.course_name,
+                c.department,
+                te.teacher_name
+
+            FROM timetable t
+
+            INNER JOIN courses c
+                ON t.course_id = c.course_id
+
+            LEFT JOIN teachers te
+                ON t.teacher_id = te.teacher_id
+
+            WHERE t.semester = (
+                SELECT CAST(semester AS INTEGER)
+                FROM students
+                WHERE student_id = %s
+            )
+
+            AND t.status = 'Scheduled'
+
+            ORDER BY
+                CASE t.day_name
+                    WHEN 'Monday' THEN 1
+                    WHEN 'Tuesday' THEN 2
+                    WHEN 'Wednesday' THEN 3
+                    WHEN 'Thursday' THEN 4
+                    WHEN 'Friday' THEN 5
+                    WHEN 'Saturday' THEN 6
+                    WHEN 'Sunday' THEN 7
+                    ELSE 8
+                END,
+                t.start_time
+        """
+
+        cur.execute(query, (student_id,))
+
+        rows = cur.fetchall()
+
+        print("================================")
+        print("STUDENT TIMETABLE DEBUG")
+        print("STUDENT ID:", student_id)
+        print("TIMETABLE ROWS:", rows)
+        print("ROW COUNT:", len(rows))
+        print("================================")
+
+        return rows
+
+    except Exception as e:
+
+        print("Student Timetable Error:", e)
+
+        return []
+
+    finally:
+
+        if cur:
+            cur.close()
+
+        if conn:
+            conn.close()
+
+
+
+
+
+
+
+
+
+
+
+
+
+def get_student_courses(student_id):
+
+    conn = get_connection()
+
+    try:
+
+        cur = conn.cursor()
+
+        cur.execute("""
+            SELECT
+                c.course_id,
+                c.course_code,
+                c.course_name,
+                c.department,
+                c.semester,
+                c.teacher_id,
+                c.credits,
+                t.teacher_name
+
+            FROM student_courses sc
+
+            INNER JOIN courses c
+                ON sc.course_id = c.course_id
+
+            LEFT JOIN teachers t
+                ON c.teacher_id = t.teacher_id
+
+            WHERE sc.student_id = %s
+
+            ORDER BY c.semester, c.course_code
+        """, (student_id,))
+
+        rows = cur.fetchall()
+
+        courses = []
+
+        for row in rows:
+
+            courses.append({
+                "Course ID": row[0],
+                "Course Code": row[1],
+                "Course Name": row[2],
+                "Department": row[3],
+                "Semester": row[4],
+                "Teacher ID": row[5],
+                "Credits": row[6],
+                "Teacher": row[7] or "Not Assigned"
+            })
+
+        return courses
+
+    except Exception as e:
+
+        print(
+            "GET STUDENT COURSES ERROR:",
+            e
+        )
+
+        return []
+
+    finally:
+
+        cur.close()
+        conn.close()
+
+
+
+
+def get_student_profile(student_id):
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    query = """
+        SELECT
+            s.student_id,
+            s.student_name,
+            s.dob,
+            s.gender,
+            s.blood_group,
+            s.email,
+            s.phone,
+            s.address,
+            s.city,
+            s.state,
+            s.pincode,
+            s.enrollment_no,
+            s.roll_no,
+            s.department,
+            s.semester,
+            s.photo,
+
+            p.father_name,
+            p.mother_name,
+            p.phone AS parent_phone,
+            p.email AS parent_email
+
+        FROM students s
+
+        LEFT JOIN parents p
+            ON s.student_id = p.student_id
+
+        WHERE s.student_id = %s
+    """
+
+    cur.execute(query, (student_id,))
+
+    row = cur.fetchone()
+
+    if not row:
+        cur.close()
+        conn.close()
+        return None
+
+    columns = [desc[0] for desc in cur.description]
+
+    profile = dict(zip(columns, row))
+
+    cur.close()
+    conn.close()
+
+    return profile
+
+
+
+
+
+
+def get_student_dashboard_summary(student_id):
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    # -----------------------------
+    # 1. ATTENDANCE
+    # -----------------------------
+
+    cur.execute("""
+        SELECT
+            COUNT(*) AS total_classes,
+            COUNT(*) FILTER (
+                WHERE status = 'Present'
+            ) AS present_classes
+        FROM attendance
+        WHERE student_id = %s
+    """, (student_id,))
+
+    attendance_row = cur.fetchone()
+
+    total_classes = attendance_row[0] or 0
+    present_classes = attendance_row[1] or 0
+
+    if total_classes > 0:
+        attendance = round(
+            (present_classes / total_classes) * 100,
+            2
+        )
+    else:
+        attendance = 0
+
+
+    # -----------------------------
+    # 2. ENROLLED COURSES
+    # -----------------------------
+
+    cur.execute("""
+        SELECT COUNT(DISTINCT course_id)
+        FROM student_courses
+        WHERE student_id = %s
+    """, (student_id,))
+
+    courses = cur.fetchone()[0] or 0
+
+
+    # -----------------------------
+    # 3. CGPA
+    # -----------------------------
+
+    # Results table me abhi data nahi hai
+    cgpa = 0
+
+
+    # -----------------------------
+    # 4. PENDING ASSIGNMENTS
+    # -----------------------------
+
+    # Assignment module abhi complete nahi hai
+    pending_assignments = 0
+
+
+    # -----------------------------
+    # CLOSE CONNECTION
+    # -----------------------------
+
+    cur.close()
+    conn.close()
+
+
+    return {
+        "attendance": attendance,
+        "cgpa": float(cgpa),
+        "courses": int(courses),
+        "pending_assignments": int(pending_assignments)
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def get_student_today_classes(student_id):
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT
+            c.course_name,
+            t.teacher_name,
+            tt.start_time,
+            tt.end_time
+        FROM timetable tt
+
+        JOIN courses c
+            ON tt.course_id = c.course_id
+
+        LEFT JOIN teachers t
+            ON c.teacher_id = t.teacher_id
+
+        WHERE tt.class_date = CURRENT_DATE
+
+        ORDER BY tt.start_time
+    """, ())
+
+    rows = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    classes = []
+
+    for row in rows:
+        classes.append({
+            "course_name": row[0],
+            "teacher_name": row[1] or "Faculty",
+            "start_time": row[2],
+            "end_time": row[3]
+        })
+
+    return classes
+
+
+
+
+
+
+
+
+
+
+
+
+def get_student_notices(student_id):
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT
+            notice_id,
+            title,
+            description,
+            notice_date
+        FROM notices
+        WHERE status = 'Published'
+        ORDER BY notice_date DESC
+        LIMIT 5
+    """)
+
+    rows = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    notices = []
+
+    for row in rows:
+
+        notices.append({
+            "notice_id": row[0],
+            "title": row[1],
+            "description": row[2],
+            "notice_date": row[3]
+        })
+
+    return notices
+
+
+
+
+
+
+
+
+

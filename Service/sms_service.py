@@ -73,3 +73,9 @@ def send_attendance_sms(phone, student_name, course_name, status):
         print("SMS ERROR:", e)
 
         return False
+    
+
+
+
+
+

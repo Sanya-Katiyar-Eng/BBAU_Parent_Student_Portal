@@ -27,3 +27,50 @@ def send_parent_email(parent_email, student_name, course_name, attendance_date):
 
     return True
 
+from database.db import get_connection
+
+
+def save_fcm_token(parent_id, student_id, fcm_token):
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    query = """
+        INSERT INTO fcm_tokens
+        (
+            parent_id,
+            student_id,
+            fcm_token,
+            updated_at
+        )
+        VALUES
+        (
+            %s,
+            %s,
+            %s,
+            CURRENT_TIMESTAMP
+        )
+
+        ON CONFLICT (fcm_token)
+        DO UPDATE SET
+
+            parent_id = EXCLUDED.parent_id,
+
+            student_id = EXCLUDED.student_id,
+
+            updated_at = CURRENT_TIMESTAMP
+    """
+
+    cur.execute(
+        query,
+        (
+            parent_id,
+            student_id,
+            fcm_token
+        )
+    )
+
+    conn.commit()
+
+    cur.close()
+    conn.close()

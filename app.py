@@ -146,7 +146,7 @@ def dashboard_router():
 
 
     elif role == "parent":
-        print("Parent role detected")
+
         parent_home()
 
     else:

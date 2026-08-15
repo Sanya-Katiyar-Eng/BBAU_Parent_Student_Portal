@@ -570,99 +570,6 @@ def get_teacher_dashboard(user_id):
 
 
 
-def get_teacher_timetable(teacher_id):
-    conn = get_connection()
-    cur = conn.cursor()
-
-    try:
-        cur.execute("""
-            SELECT
-                id,
-                teacher_id,
-                course_id,
-                day,
-                start_time,
-                end_time,
-                room_no
-
-            FROM timetable
-
-            WHERE teacher_id = %s
-
-            ORDER BY
-                CASE day
-                    WHEN 'Monday' THEN 1
-                    WHEN 'Tuesday' THEN 2
-                    WHEN 'Wednesday' THEN 3
-                    WHEN 'Thursday' THEN 4
-                    WHEN 'Friday' THEN 5
-                    WHEN 'Saturday' THEN 6
-                END,
-                start_time
-
-        """, (teacher_id,))
-
-        timetable = cur.fetchall()
-
-        return timetable
-
-    except Exception as e:
-        print("Timetable Fetch Error:", e)
-        return []
-
-    finally:
-        cur.close()
-        conn.close()
-
-
-
-
-
-
-
-
-
-
-
-def get_teacher_notices(teacher_id):
-    conn = get_connection()
-    cur = conn.cursor()
-
-    try:
-        cur.execute("""
-            SELECT
-                n.notice_id,
-                n.title,
-                n.message,
-                n.notice_type,
-                n.created_at
-
-            FROM notices n
-
-            WHERE 
-                n.teacher_id = %s
-                OR n.teacher_id IS NULL
-
-            ORDER BY 
-                n.created_at DESC
-
-        """, (teacher_id,))
-
-        notices = cur.fetchall()
-
-        return notices
-
-    except Exception as e:
-        print("Notice Fetch Error:", e)
-        return []
-
-    finally:
-        cur.close()
-        conn.close()
-
-
-
-
 
 
 
@@ -1515,58 +1422,6 @@ def update_result(
 
 
 
-def add_assignment(
-        teacher_id,
-        course_id,
-        title,
-        description,
-        due_date
-    ):
-
-    conn = get_connection()
-    cur = conn.cursor()
-
-    try:
-
-        cur.execute("""
-            INSERT INTO assignments
-            (
-                teacher_id,
-                course_id,
-                title,
-                description,
-                due_date
-            )
-
-            VALUES
-            (%s, %s, %s, %s, %s)
-
-        """, (
-            teacher_id,
-            course_id,
-            title,
-            description,
-            due_date
-        ))
-
-
-        conn.commit()
-
-        return True
-
-
-    except Exception as e:
-        conn.rollback()
-        print("Assignment Add Error:", e)
-        return False
-
-
-    finally:
-        cur.close()
-        conn.close()
-
-
-
 
 
 
@@ -1651,51 +1506,6 @@ def get_assignments(
 
 
 
-def update_assignment(
-        assignment_id,
-        title,
-        description,
-        due_date
-    ):
-
-    conn = get_connection()
-    cur = conn.cursor()
-
-    try:
-
-        cur.execute("""
-            UPDATE assignments
-
-            SET
-                title = %s,
-                description = %s,
-                due_date = %s
-
-            WHERE
-                assignment_id = %s
-
-        """, (
-            title,
-            description,
-            due_date,
-            assignment_id
-        ))
-
-
-        conn.commit()
-
-        return True
-
-
-    except Exception as e:
-        conn.rollback()
-        print("Assignment Update Error:", e)
-        return False
-
-
-    finally:
-        cur.close()
-        conn.close()
 
 
 
@@ -1711,36 +1521,9 @@ def update_assignment(
 
 
 
-def delete_assignment(assignment_id):
-
-    conn = get_connection()
-    cur = conn.cursor()
-
-    try:
-
-        cur.execute("""
-            DELETE FROM assignments
-
-            WHERE
-                assignment_id = %s
-
-        """, (assignment_id,))
 
 
-        conn.commit()
 
-        return True
-
-
-    except Exception as e:
-        conn.rollback()
-        print("Assignment Delete Error:", e)
-        return False
-
-
-    finally:
-        cur.close()
-        conn.close()
 
 
 
@@ -2037,7 +1820,6 @@ def get_today_classes(teacher_id):
 
 
 from database.db import get_connection
-
 def assign_course(teacher_id, course_id, semester, session):
     conn = get_connection()
     cur = conn.cursor()
@@ -2052,6 +1834,16 @@ def assign_course(teacher_id, course_id, semester, session):
     conn.commit()
     cur.close()
     conn.close()
+
+
+
+
+
+
+
+
+
+
 
 def get_teacher_courses(teacher_id):
     conn = get_connection()
@@ -2086,61 +1878,6 @@ def get_teacher_courses(teacher_id):
         })
 
     return courses
-def add_class_schedule(
-    teacher_id,
-    course_id,
-    semester,
-    day_name,
-    start_time,
-    end_time,
-    room_no
-):
-
-    conn = get_connection()
-    cur = conn.cursor()
-
-    try:
-
-        cur.execute("""
-
-        INSERT INTO timetable
-        (
-            teacher_id,
-            course_id,
-            semester,
-            day_name,
-            start_time,
-            end_time,
-            room_no
-        )
-
-        VALUES
-        (%s,%s,%s,%s,%s,%s,%s)
-
-        """,(
-            teacher_id,
-            course_id,
-            semester,
-            day_name,
-            start_time,
-            end_time,
-            room_no
-        ))
-
-        conn.commit()
-
-        return True
-
-    except Exception as e:
-
-        conn.rollback()
-        print(e)
-
-        return False
-
-    finally:
-
-        conn.close()
 
 
    

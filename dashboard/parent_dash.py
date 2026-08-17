@@ -162,7 +162,7 @@ def parent_home():
         "Navigation",
         [
             "Dashboard",
-            "Student Profile",
+            "Profile",
             "Attendance",
             "Assignments",
             "Timetable",
@@ -188,7 +188,7 @@ def parent_home():
         parent_dashboard(parent_id)
 
 
-    elif menu == "Student Profile":
+    elif menu == "Profile":
 
         parent_profile()
 
@@ -241,154 +241,10 @@ def parent_home():
 def parent_dashboard(parent_id):
 
     # ==========================================================
-    # PAGE STYLE
-    # ==========================================================
-
-    st.markdown("""
-    <style>
-
-    .dashboard-welcome {
-        padding: 24px 28px;
-        border-radius: 18px;
-        margin-bottom: 24px;
-        background: linear-gradient(
-            135deg,
-            rgba(67, 97, 238, 0.12),
-            rgba(76, 201, 240, 0.10)
-        );
-        border: 1px solid rgba(67, 97, 238, 0.15);
-        animation: fadeSlide 0.6s ease;
-    }
-
-    .welcome-title {
-        font-size: 30px;
-        font-weight: 700;
-        margin-bottom: 5px;
-    }
-
-    .welcome-subtitle {
-        font-size: 14px;
-        opacity: 0.70;
-    }
-
-    .section-heading {
-        font-size: 21px;
-        font-weight: 700;
-        margin-top: 25px;
-        margin-bottom: 14px;
-        animation: fadeSlide 0.7s ease;
-    }
-
-    .info-label {
-        font-size: 11px;
-        font-weight: 600;
-        opacity: 0.60;
-        letter-spacing: 0.7px;
-        text-transform: uppercase;
-    }
-
-    .info-value {
-        font-size: 19px;
-        font-weight: 650;
-        margin-top: 5px;
-    }
-
-    .quick-card {
-        padding: 20px;
-        border-radius: 16px;
-        border: 1px solid rgba(128,128,128,0.18);
-        transition: all 0.3s ease;
-        min-height: 120px;
-    }
-
-    .quick-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 12px 30px rgba(0,0,0,0.10);
-    }
-
-    .quick-title {
-        font-size: 17px;
-        font-weight: 700;
-        margin-bottom: 4px;
-    }
-
-    .quick-text {
-        font-size: 12px;
-        opacity: 0.65;
-    }
-
-    .work-card {
-        padding: 18px;
-        border-radius: 15px;
-        border: 1px solid rgba(128,128,128,0.18);
-        margin-bottom: 12px;
-        transition: all 0.3s ease;
-    }
-
-    .work-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-    }
-
-    .work-title {
-        font-size: 17px;
-        font-weight: 700;
-    }
-
-    .work-meta {
-        font-size: 12px;
-        opacity: 0.65;
-        margin-top: 5px;
-    }
-
-    .notice-card {
-        padding: 18px;
-        border-radius: 15px;
-        border: 1px solid rgba(128,128,128,0.18);
-        margin-bottom: 12px;
-        transition: all 0.3s ease;
-    }
-
-    .notice-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-    }
-
-    .notice-title {
-        font-size: 17px;
-        font-weight: 700;
-    }
-
-    .notice-meta {
-        font-size: 12px;
-        opacity: 0.65;
-        margin-top: 5px;
-    }
-
-    @keyframes fadeSlide {
-
-        from {
-            opacity: 0;
-            transform: translateY(12px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-    }
-
-    </style>
-    """, unsafe_allow_html=True)
-
-
-    # ==========================================================
     # GET PARENT + STUDENT DATA
     # ==========================================================
 
     dashboard = get_parent_dashboard(parent_id)
-
 
     if not dashboard:
 
@@ -423,320 +279,103 @@ def parent_dashboard(parent_id):
     # WELCOME
     # ==========================================================
 
-    st.markdown(
-        f"""
-        <div class="dashboard-welcome">
-
-            <div class="welcome-title">
-                Welcome, {father_name}
-            </div>
-
-            <div class="welcome-subtitle">
-                Parent Portal • Student Academic Dashboard
-            </div>
-
-        </div>
-        """,
-        unsafe_allow_html=True
+    st.title(
+        f"Welcome, {father_name or 'Parent'}"
     )
 
-
-    # ==========================================================
-    # STUDENT OVERVIEW
-    # ==========================================================
-
-    st.markdown(
-        '<div class="section-heading">Student Overview</div>',
-        unsafe_allow_html=True
+    st.caption(
+        "Parent Portal • Student Academic Dashboard"
     )
 
-
-    # ----------------------------------------------------------
-    # ROW 1
-    # ----------------------------------------------------------
-
-    col1, col2, col3 = st.columns(3)
-
-
-    with col1:
-
-        with st.container(border=True):
-
-            st.markdown(
-                '<div class="info-label">Student Name</div>',
-                unsafe_allow_html=True
-            )
-
-            st.markdown(
-                f'<div class="info-value">{student_name}</div>',
-                unsafe_allow_html=True
-            )
-
-
-    with col2:
-
-        with st.container(border=True):
-
-            st.markdown(
-                '<div class="info-label">Enrollment Number</div>',
-                unsafe_allow_html=True
-            )
-
-            st.markdown(
-                f'<div class="info-value">{enrollment}</div>',
-                unsafe_allow_html=True
-            )
-
-
-    with col3:
-
-        with st.container(border=True):
-
-            st.markdown(
-                '<div class="info-label">Roll Number</div>',
-                unsafe_allow_html=True
-            )
-
-            st.markdown(
-                f'<div class="info-value">{roll_no}</div>',
-                unsafe_allow_html=True
-            )
-
-
-    # ----------------------------------------------------------
-    # ROW 2
-    # ----------------------------------------------------------
-
-    col1, col2, col3 = st.columns(3)
-
-
-    with col1:
-
-        with st.container(border=True):
-
-            st.markdown(
-                '<div class="info-label">Department</div>',
-                unsafe_allow_html=True
-            )
-
-            st.markdown(
-                f'<div class="info-value">{department}</div>',
-                unsafe_allow_html=True
-            )
-
-
-    with col2:
-
-        with st.container(border=True):
-
-            st.markdown(
-                '<div class="info-label">Semester</div>',
-                unsafe_allow_html=True
-            )
-
-            st.markdown(
-                f'<div class="info-value">{semester}</div>',
-                unsafe_allow_html=True
-            )
-
-
-    with col3:
-
-        with st.container(border=True):
-
-            st.markdown(
-                '<div class="info-label">Student Status</div>',
-                unsafe_allow_html=True
-            )
-
-            if str(student_status).lower() == "active":
-
-                st.success(
-                    "Active"
-                )
-
-            else:
-
-                st.warning(
-                    str(student_status)
-                )
-
-
-    # ==========================================================
-    # PARENT INFORMATION
-    # ==========================================================
-
-    st.markdown(
-        '<div class="section-heading">Parent Information</div>',
-        unsafe_allow_html=True
-    )
-
-
-    parent_col1, parent_col2 = st.columns(2)
-
-
-    with parent_col1:
-
-        with st.container(border=True):
-
-            st.subheader(
-                "Father"
-            )
-
-            st.caption(
-                "Father Name"
-            )
-
-            st.write(
-                father_name
-            )
-
-            st.divider()
-
-            st.caption(
-                "Phone Number"
-            )
-
-            st.write(
-                phone
-            )
-
-
-    with parent_col2:
-
-        with st.container(border=True):
-
-            st.subheader(
-                "Mother"
-            )
-
-            st.caption(
-                "Mother Name"
-            )
-
-            st.write(
-                mother_name
-            )
-
-            st.divider()
-
-            st.caption(
-                "Email Address"
-            )
-
-            st.write(
-                email
-            )
+    st.divider()
 
 
     # ==========================================================
     # QUICK ACCESS
     # ==========================================================
 
-    st.markdown(
-        '<div class="section-heading">Quick Access</div>',
-        unsafe_allow_html=True
+    st.subheader(
+        "Quick Access"
     )
 
 
     q1, q2, q3, q4 = st.columns(4)
 
 
+    # ----------------------------------------------------------
+    # ATTENDANCE
+    # ----------------------------------------------------------
+
     with q1:
 
         with st.container(border=True):
 
             st.markdown(
-                """
-                <div class="quick-card">
-
-                    <div class="quick-title">
-                        Attendance
-                    </div>
-
-                    <div class="quick-text">
-                        View student attendance
-                    </div>
-
-                </div>
-                """,
-                unsafe_allow_html=True
+                "### 📊 Attendance"
             )
 
+            st.caption(
+                "View student attendance"
+            )
+
+
+    # ----------------------------------------------------------
+    # RESULTS
+    # ----------------------------------------------------------
 
     with q2:
 
         with st.container(border=True):
 
             st.markdown(
-                """
-                <div class="quick-card">
-
-                    <div class="quick-title">
-                        Results
-                    </div>
-
-                    <div class="quick-text">
-                        Check academic results
-                    </div>
-
-                </div>
-                """,
-                unsafe_allow_html=True
+                "### 📈 Results"
             )
 
+            st.caption(
+                "Check academic results"
+            )
+
+
+    # ----------------------------------------------------------
+    # ASSIGNMENTS
+    # ----------------------------------------------------------
 
     with q3:
 
         with st.container(border=True):
 
             st.markdown(
-                """
-                <div class="quick-card">
-
-                    <div class="quick-title">
-                        Assignments
-                    </div>
-
-                    <div class="quick-text">
-                        View academic work
-                    </div>
-
-                </div>
-                """,
-                unsafe_allow_html=True
+                "### 📝 Assignments"
             )
 
+            st.caption(
+                "View academic work"
+            )
+
+
+    # ----------------------------------------------------------
+    # NOTICES
+    # ----------------------------------------------------------
 
     with q4:
 
         with st.container(border=True):
 
             st.markdown(
-                """
-                <div class="quick-card">
+                "### 🔔 Notices"
+            )
 
-                    <div class="quick-title">
-                        Notices
-                    </div>
-
-                    <div class="quick-text">
-                        View latest notices
-                    </div>
-
-                </div>
-                """,
-                unsafe_allow_html=True
+            st.caption(
+                "View latest notices"
             )
 
 
     # ==========================================================
-    # RECENT ASSIGNMENTS / HOMEWORK / PROJECTS
+    # RECENT ACADEMIC WORK
     # ==========================================================
 
-    st.markdown(
-        '<div class="section-heading">Recent Academic Work</div>',
-        unsafe_allow_html=True
+    st.subheader(
+        "Recent Academic Work"
     )
 
 
@@ -753,41 +392,85 @@ def parent_dashboard(parent_id):
 
     if academic_work:
 
-        # latest 5
+        # Latest 5
         academic_work = academic_work[:5]
 
 
         for work in academic_work:
 
-            with st.container(border=True):
-
-                st.markdown(
-                    f"""
-                    <div class="work-card">
-
-                        <div class="work-title">
-                            {work.get("title", "Untitled")}
-                        </div>
-
-                        <div class="work-meta">
-                            Course: {work.get("course", "N/A")}
-                            &nbsp; • &nbsp;
-                            Type: {work.get("type", "Assignment")}
-                        </div>
-
-                        <div style="margin-top:10px;">
-                            {work.get("description", "No description provided.")}
-                        </div>
-
-                        <div class="work-meta">
-                            Due Date:
-                            {work.get("due_date", "Not specified")}
-                        </div>
-
-                    </div>
-                    """,
-                    unsafe_allow_html=True
+            title = (
+                work.get(
+                    "title",
+                    "Untitled"
                 )
+                or "Untitled"
+            )
+
+            course = (
+                work.get(
+                    "course",
+                    "N/A"
+                )
+                or "N/A"
+            )
+
+            work_type = (
+                work.get(
+                    "type",
+                    "Assignment"
+                )
+                or "Assignment"
+            )
+
+            due_date = (
+                work.get(
+                    "due_date",
+                    "Not specified"
+                )
+                or "Not specified"
+            )
+
+
+            # --------------------------------------------------
+            # SINGLE LINE CARD
+            # --------------------------------------------------
+
+            with st.container(
+                border=True
+            ):
+
+                col1, col2, col3, col4 = st.columns(
+                    [3, 2, 2, 1.5]
+                )
+
+
+                with col1:
+
+                    st.write(
+                        f"**{title}**"
+                    )
+
+
+                with col2:
+
+                    st.caption(
+                        f"Course: {course}"
+                    )
+
+
+                with col3:
+
+                    st.caption(
+                        f"Type: {work_type}"
+                    )
+
+
+                with col4:
+
+                    st.caption(
+                        f"Due: {due_date}"
+                    )
+
 
     else:
 
@@ -797,12 +480,11 @@ def parent_dashboard(parent_id):
 
 
     # ==========================================================
-    # RECENT NOTICES
+    # LATEST NOTICES
     # ==========================================================
 
-    st.markdown(
-        '<div class="section-heading">Latest Notices</div>',
-        unsafe_allow_html=True
+    st.subheader(
+        "Latest Notices"
     )
 
 
@@ -819,46 +501,91 @@ def parent_dashboard(parent_id):
 
     if student_notices:
 
+        # Latest 5
         student_notices = student_notices[:5]
 
 
         for notice in student_notices:
 
-            with st.container(border=True):
-
-                st.markdown(
-                    f"""
-                    <div class="notice-card">
-
-                        <div class="notice-title">
-                            {notice.get("title", "Notice")}
-                        </div>
-
-                        <div class="notice-meta">
-                            {notice.get("notice_type", "General Notice")}
-                            &nbsp; • &nbsp;
-                            {notice.get("course", "General")}
-                        </div>
-
-                        <div style="margin-top:10px;">
-                            {notice.get("message", "No message available.")}
-                        </div>
-
-                        <div class="notice-meta">
-                            Expiry:
-                            {notice.get("expiry_date", "Not specified")}
-                        </div>
-
-                    </div>
-                    """,
-                    unsafe_allow_html=True
+            title = (
+                notice.get(
+                    "title",
+                    "Notice"
                 )
+                or "Notice"
+            )
+
+            notice_type = (
+                notice.get(
+                    "notice_type",
+                    "General Notice"
+                )
+                or "General Notice"
+            )
+
+            course = (
+                notice.get(
+                    "course",
+                    "General"
+                )
+                or "General"
+            )
+
+            expiry_date = (
+                notice.get(
+                    "expiry_date",
+                    "Not specified"
+                )
+                or "Not specified"
+            )
+
+
+            # --------------------------------------------------
+            # SINGLE LINE NOTICE
+            # --------------------------------------------------
+
+            with st.container(
+                border=True
+            ):
+
+                col1, col2, col3, col4 = st.columns(
+                    [3, 2, 2, 1.5]
+                )
+
+
+                with col1:
+
+                    st.write(
+                        f"**🔔 {title}**"
+                    )
+
+
+                with col2:
+
+                    st.caption(
+                        f"Type: {notice_type}"
+                    )
+
+
+                with col3:
+
+                    st.caption(
+                        f"Course: {course}"
+                    )
+
+
+                with col4:
+
+                    st.caption(
+                        f"Expiry: {expiry_date}"
+                    )
+
 
     else:
 
         st.info(
             "No notices have been published for this student yet."
-        )          
+        )
 
 
 
@@ -867,6 +594,573 @@ def parent_dashboard(parent_id):
 
 
 
+
+def parent_dashboard(parent_id):
+
+    # ==========================================================
+    # GET PARENT + STUDENT DATA
+    # ==========================================================
+
+    dashboard = get_parent_dashboard(parent_id)
+
+    if not dashboard:
+        st.error("Parent record not found.")
+        return
+
+
+    # ==========================================================
+    # UNPACK DATA
+    # ==========================================================
+
+    (
+        student_id,
+        student_name,
+        enrollment,
+        department,
+        semester,
+        roll_no,
+        student_status,
+        account_status,
+        father_name,
+        mother_name,
+        phone,
+        email
+    ) = dashboard
+
+
+    # ==========================================================
+    # WELCOME
+    # ==========================================================
+
+    st.title(
+        f"Welcome, {father_name or 'Parent'}"
+    )
+
+    st.caption(
+        "Parent Portal • Student Academic Dashboard"
+    )
+
+    st.divider()
+
+
+    # ==========================================================
+    # TODAY'S ATTENDANCE
+    # ==========================================================
+
+    try:
+
+        today_attendance = get_today_student_attendance(
+            student_id
+        )
+
+    except Exception:
+
+        today_attendance = []
+
+
+    if today_attendance:
+
+        st.subheader(
+            "Today's Attendance"
+        )
+
+
+        # Number of attendance entries/classes today
+        attendance_count = len(
+            today_attendance
+        )
+
+
+        # ------------------------------------------------------
+        # ATTENDANCE SUMMARY
+        # ------------------------------------------------------
+
+        with st.container(border=True):
+
+            col1, col2 = st.columns(2)
+
+
+            with col1:
+
+                st.metric(
+                    "Classes Today",
+                    attendance_count
+                )
+
+
+            with col2:
+
+                st.caption(
+                    "Attendance recorded today"
+                )
+
+
+        # ------------------------------------------------------
+        # TODAY'S ATTENDANCE DETAILS
+        # ------------------------------------------------------
+
+        for attendance in today_attendance:
+
+            with st.container(
+                border=True
+            ):
+
+                col1, col2, col3 = st.columns(
+                    [3, 2, 2]
+                )
+
+
+                with col1:
+
+                    st.write(
+                        f"**{attendance.get('course', 'Course')}**"
+                    )
+
+
+                with col2:
+
+                    st.caption(
+                        f"Status: {attendance.get('status', 'N/A')}"
+                    )
+
+
+                with col3:
+
+                    st.caption(
+                        f"Time: {attendance.get('time', 'N/A')}"
+                    )
+
+
+    # ==========================================================
+    # RECENT ACADEMIC WORK
+    # ==========================================================
+
+    try:
+
+        academic_work = get_student_assignments(
+            student_id
+        )
+
+    except Exception:
+
+        academic_work = []
+
+
+    if academic_work:
+
+        st.subheader(
+            "Recent Academic Work"
+        )
+
+
+        academic_work = academic_work[:5]
+
+
+        for work in academic_work:
+
+            title = (
+                work.get(
+                    "title",
+                    "Untitled"
+                )
+                or "Untitled"
+            )
+
+            course = (
+                work.get(
+                    "course",
+                    "N/A"
+                )
+                or "N/A"
+            )
+
+            work_type = (
+                work.get(
+                    "type",
+                    "Assignment"
+                )
+                or "Assignment"
+            )
+
+            due_date = (
+                work.get(
+                    "due_date",
+                    "Not specified"
+                )
+                or "Not specified"
+            )
+
+
+            # --------------------------------------------------
+            # ONE LINE
+            # --------------------------------------------------
+
+            with st.container(
+                border=True
+            ):
+
+                col1, col2, col3, col4 = st.columns(
+                    [3, 2, 2, 1.5]
+                )
+
+
+                with col1:
+
+                    st.write(
+                        f"**{title}**"
+                    )
+
+
+                with col2:
+
+                    st.caption(
+                        f"Course: {course}"
+                    )
+
+
+                with col3:
+
+                    st.caption(
+                        f"Type: {work_type}"
+                    )
+
+
+                with col4:
+
+                    st.caption(
+                        f"Due: {due_date}"
+                    )
+
+
+    # ==========================================================
+    # LATEST NOTICES
+    # ==========================================================
+
+    try:
+
+        student_notices = get_student_notices(
+            student_id
+        )
+
+    except Exception:
+
+        student_notices = []
+
+
+    if student_notices:
+
+        st.subheader(
+            "Latest Notices"
+        )
+
+
+        student_notices = student_notices[:5]
+
+
+        for notice in student_notices:
+
+            title = (
+                notice.get(
+                    "title",
+                    "Notice"
+                )
+                or "Notice"
+            )
+
+            notice_type = (
+                notice.get(
+                    "notice_type",
+                    "General Notice"
+                )
+                or "General Notice"
+            )
+
+            course = (
+                notice.get(
+                    "course",
+                    "General"
+                )
+                or "General"
+            )
+
+            expiry_date = (
+                notice.get(
+                    "expiry_date",
+                    "Not specified"
+                )
+                or "Not specified"
+            )
+
+
+            # --------------------------------------------------
+            # ONE LINE NOTICE
+            # --------------------------------------------------
+
+            with st.container(
+                border=True
+            ):
+
+                col1, col2, col3, col4 = st.columns(
+                    [3, 2, 2, 1.5]
+                )
+
+
+                with col1:
+
+                    st.write(
+                        f"**🔔 {title}**"
+                    )
+
+
+                with col2:
+
+                    st.caption(
+                        f"Type: {notice_type}"
+                    )
+
+
+                with col3:
+
+                    st.caption(
+                        f"Course: {course}"
+                    )
+
+
+                with col4:
+
+                    st.caption(
+                        f"Expiry: {expiry_date}"
+                    )
+
+
+
+
+
+
+
+
+
+
+
+
+
+def parent_dashboard(parent_id):
+
+    # ==========================================================
+    # GET PARENT + STUDENT DATA
+    # ==========================================================
+
+    dashboard = get_parent_dashboard(parent_id)
+
+    if not dashboard:
+        st.error("Parent record not found.")
+        return
+
+
+    # ==========================================================
+    # UNPACK DATA
+    # ==========================================================
+
+    (
+        student_id,
+        student_name,
+        enrollment,
+        department,
+        semester,
+        roll_no,
+        student_status,
+        account_status,
+        father_name,
+        mother_name,
+        phone,
+        email
+    ) = dashboard
+
+
+    # ==========================================================
+    # WELCOME
+    # ==========================================================
+
+    st.title(
+        f"Welcome, {father_name or 'Parent'}"
+    )
+
+    st.caption(
+        "Parent Portal • Student Academic Dashboard"
+    )
+
+    st.divider()
+
+
+    # ==========================================================
+    # TODAY'S ATTENDANCE
+    # ==========================================================
+
+    st.subheader("Today's Attendance")
+
+    # Abhi function baad me banayenge
+    # Isliye temporary message dikha rahe hain
+
+    st.info(
+        "Today's attendance will appear here."
+    )
+
+
+    # ==========================================================
+    # RECENT ACADEMIC WORK
+    # ==========================================================
+
+    st.subheader(
+        "Recent Academic Work"
+    )
+
+    academic_work = get_student_assignments(
+        student_id
+    )
+
+    if academic_work:
+
+        academic_work = academic_work[:5]
+
+        for work in academic_work:
+
+            title = (
+                work.get("title", "Untitled")
+                or "Untitled"
+            )
+
+            course = (
+                work.get("course", "N/A")
+                or "N/A"
+            )
+
+            work_type = (
+                work.get("type", "Assignment")
+                or "Assignment"
+            )
+
+            due_date = (
+                work.get("due_date", "Not specified")
+                or "Not specified"
+            )
+
+            with st.container(border=True):
+
+                col1, col2, col3, col4 = st.columns(
+                    [3, 2, 2, 1.5]
+                )
+
+                with col1:
+                    st.write(
+                        f"**{title}**"
+                    )
+
+                with col2:
+                    st.caption(
+                        f"Course: {course}"
+                    )
+
+                with col3:
+                    st.caption(
+                        f"Type: {work_type}"
+                    )
+
+                with col4:
+                    st.caption(
+                        f"Due: {due_date}"
+                    )
+
+    else:
+
+        st.info(
+            "No academic work has been published yet."
+        )
+
+
+    # ==========================================================
+    # LATEST NOTICES
+    # ==========================================================
+
+    student_notices = get_student_notices(
+        student_id
+    )
+
+    if student_notices:
+
+        st.subheader(
+            "Latest Notices"
+        )
+
+        student_notices = student_notices[:5]
+
+        for notice in student_notices:
+
+            title = (
+                notice.get("title", "Notice")
+                or "Notice"
+            )
+
+            notice_type = (
+                notice.get(
+                    "notice_type",
+                    "General Notice"
+                )
+                or "General Notice"
+            )
+
+            course = (
+                notice.get(
+                    "course",
+                    "General"
+                )
+                or "General"
+            )
+
+            expiry_date = (
+                notice.get(
+                    "expiry_date",
+                    "Not specified"
+                )
+                or "Not specified"
+            )
+
+            with st.container(border=True):
+
+                col1, col2, col3, col4 = st.columns(
+                    [3, 2, 2, 1.5]
+                )
+
+                with col1:
+                    st.write(
+                        f"**🔔 {title}**"
+                    )
+
+                with col2:
+                    st.caption(
+                        f"Type: {notice_type}"
+                    )
+
+                with col3:
+                    st.caption(
+                        f"Course: {course}"
+                    )
+
+                with col4:
+                    st.caption(
+                        f"Expiry: {expiry_date}"
+                    )
+
+
+
+
+
+
+
+
+
+
+
+                    
 
 
 
@@ -875,134 +1169,10 @@ def parent_dashboard(parent_id):
 def parent_profile():
 
     # ==========================================================
-    # PAGE STYLE
-    # ==========================================================
-
-    st.markdown("""
-    <style>
-
-    .profile-header {
-        padding: 24px 28px;
-        border-radius: 18px;
-        margin-bottom: 25px;
-        background: linear-gradient(
-            135deg,
-            rgba(67, 97, 238, 0.12),
-            rgba(76, 201, 240, 0.10)
-        );
-        border: 1px solid rgba(67, 97, 238, 0.15);
-        animation: profileFade 0.6s ease;
-    }
-
-    .profile-title {
-        font-size: 30px;
-        font-weight: 750;
-        margin-bottom: 5px;
-    }
-
-    .profile-subtitle {
-        font-size: 14px;
-        opacity: 0.65;
-    }
-
-    .section-title {
-        font-size: 21px;
-        font-weight: 700;
-        margin-top: 24px;
-        margin-bottom: 14px;
-    }
-
-    .student-name {
-        font-size: 28px;
-        font-weight: 750;
-        margin-bottom: 12px;
-    }
-
-    .info-label {
-        font-size: 11px;
-        font-weight: 650;
-        opacity: 0.58;
-        text-transform: uppercase;
-        letter-spacing: 0.7px;
-        margin-bottom: 3px;
-    }
-
-    .info-value {
-        font-size: 16px;
-        font-weight: 600;
-        margin-bottom: 14px;
-    }
-
-    .profile-card {
-        padding: 22px;
-        border-radius: 17px;
-        border: 1px solid rgba(128,128,128,0.18);
-        transition: all 0.3s ease;
-        animation: cardFade 0.7s ease;
-    }
-
-    .profile-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 12px 28px rgba(0,0,0,0.09);
-    }
-
-    .address-card {
-        padding: 16px 20px;
-        border-radius: 14px;
-        border: 1px solid rgba(128,128,128,0.15);
-        margin-top: 15px;
-        font-size: 14px;
-        opacity: 0.85;
-    }
-
-    .status-active {
-        display: inline-block;
-        padding: 5px 12px;
-        border-radius: 20px;
-        background: rgba(40,167,69,0.12);
-        color: #198754;
-        font-size: 13px;
-        font-weight: 650;
-    }
-
-    @keyframes profileFade {
-
-        from {
-            opacity: 0;
-            transform: translateY(12px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-    }
-
-    @keyframes cardFade {
-
-        from {
-            opacity: 0;
-            transform: translateY(8px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-    }
-
-    </style>
-    """, unsafe_allow_html=True)
-
-
-    # ==========================================================
     # GET PROFILE DATA
     # ==========================================================
 
     profile = get_parent_profile()
-
 
     if not profile:
 
@@ -1020,12 +1190,14 @@ def parent_profile():
     (
         parent_id,
         student_id,
+
         father_name,
         mother_name,
         occupation,
         parent_phone,
         parent_email,
         parent_address,
+
         student_name,
         roll_no,
         enrollment,
@@ -1034,47 +1206,211 @@ def parent_profile():
         gender,
         dob,
         blood_group,
+
         student_email,
         student_phone,
         student_address,
         city,
         state,
         pincode,
+
         photo,
         student_status,
         account_status
+
     ) = profile
 
 
     # ==========================================================
-    # HEADER
+    # PAGE HEADER
     # ==========================================================
 
-    st.markdown(
-        """
-        <div class="profile-header">
+    st.title("My Profile")
 
-            <div class="profile-title">
-                Parent & Student Profile
-            </div>
-
-            <div class="profile-subtitle">
-                View student academic information and parent details
-            </div>
-
-        </div>
-        """,
-        unsafe_allow_html=True
+    st.caption(
+        "Parent profile and linked student information"
     )
 
+    st.divider()
+
 
     # ==========================================================
-    # STUDENT INFORMATION
+    # PARENT PROFILE HEADER
     # ==========================================================
 
-    st.markdown(
-        '<div class="section-title">Student Information</div>',
-        unsafe_allow_html=True
+    with st.container(border=True):
+
+        header_col1, header_col2 = st.columns(
+            [1, 4]
+        )
+
+
+        # ------------------------------------------------------
+        # DEFAULT PARENT AVATAR
+        # ------------------------------------------------------
+
+        with header_col1:
+
+            st.image(
+                "https://avatar.iran.liara.run/public",
+                width=120
+            )
+
+
+        # ------------------------------------------------------
+        # PARENT BASIC INFORMATION
+        # ------------------------------------------------------
+
+        with header_col2:
+
+            st.subheader(
+                father_name
+                or mother_name
+                or "Parent"
+            )
+
+            st.caption(
+                "Parent / Guardian"
+            )
+
+
+            # Parent contact information
+
+            info_col1, info_col2 = st.columns(2)
+
+
+            with info_col1:
+
+                st.caption("Mobile Number")
+
+                st.write(
+                    parent_phone
+                    or "Not Available"
+                )
+
+
+            with info_col2:
+
+                st.caption("Email Address")
+
+                st.write(
+                    parent_email
+                    or "Not Available"
+                )
+
+
+            st.success(
+                f"● {account_status or 'Active'}"
+            )
+
+
+    # ==========================================================
+    # PARENT INFORMATION
+    # ==========================================================
+
+    st.subheader("Parent Information")
+
+
+    parent_col1, parent_col2 = st.columns(2)
+
+
+    # ----------------------------------------------------------
+    # FATHER INFORMATION
+    # ----------------------------------------------------------
+
+    with parent_col1:
+
+        with st.container(border=True):
+
+            st.markdown("### Father Information")
+
+
+            st.caption("Father Name")
+
+            st.write(
+                father_name
+                or "Not Available"
+            )
+
+
+            st.caption("Occupation")
+
+            st.write(
+                occupation
+                or "Not Available"
+            )
+
+
+            st.caption("Mobile Number")
+
+            st.write(
+                parent_phone
+                or "Not Available"
+            )
+
+
+    # ----------------------------------------------------------
+    # MOTHER INFORMATION
+    # ----------------------------------------------------------
+
+    with parent_col2:
+
+        with st.container(border=True):
+
+            st.markdown("### Mother Information")
+
+
+            st.caption("Mother Name")
+
+            st.write(
+                mother_name
+                or "Not Available"
+            )
+
+
+            st.caption("Parent Email")
+
+            st.write(
+                parent_email
+                or "Not Available"
+            )
+
+
+            st.caption("Account Status")
+
+            st.write(
+                account_status
+                or "Not Available"
+            )
+
+
+    # ==========================================================
+    # PARENT ADDRESS
+    # ==========================================================
+
+    st.subheader("Contact Address")
+
+
+    with st.container(border=True):
+
+        st.caption("Parent Address")
+
+        st.write(
+            parent_address
+            or "Address not available"
+        )
+
+
+    # ==========================================================
+    # LINKED STUDENT INFORMATION
+    # ==========================================================
+
+    st.divider()
+
+    st.subheader("Student Information")
+
+    st.caption(
+        "Academic and personal information of your linked student"
     )
 
 
@@ -1084,25 +1420,27 @@ def parent_profile():
 
     with st.container(border=True):
 
-        photo_col, info_col = st.columns(
+        student_col1, student_col2 = st.columns(
             [1, 3]
         )
 
 
         # ------------------------------------------------------
-        # PHOTO
+        # STUDENT PHOTO
         # ------------------------------------------------------
 
-        with photo_col:
+        with student_col1:
 
             if photo:
 
                 st.image(
                     photo,
-                    width=180
+                    width=150
                 )
 
             else:
+
+                # Default avatar based on gender
 
                 if (
                     gender
@@ -1111,14 +1449,14 @@ def parent_profile():
 
                     st.image(
                         "https://avatar.iran.liara.run/public/girl?username=student",
-                        width=180
+                        width=150
                     )
 
                 else:
 
                     st.image(
                         "https://avatar.iran.liara.run/public/boy?username=student",
-                        width=180
+                        width=150
                     )
 
 
@@ -1126,191 +1464,164 @@ def parent_profile():
         # STUDENT BASIC INFORMATION
         # ------------------------------------------------------
 
-        with info_col:
+        with student_col2:
 
-            st.markdown(
-                f"""
-                <div class="student-name">
-                    {student_name}
-                </div>
-                """,
-                unsafe_allow_html=True
+            st.subheader(
+                student_name
+                or "Student"
             )
 
 
-            c1, c2 = st.columns(2)
+            st.caption(
+                f"{department or 'Department'}"
+                f" • Semester {semester or 'N/A'}"
+            )
+
+
+            student_basic_col1, student_basic_col2 = st.columns(2)
 
 
             # --------------------------------------------------
-            # COLUMN 1
+            # LEFT
             # --------------------------------------------------
 
-            with c1:
+            with student_basic_col1:
 
-                st.markdown(
-                    f"""
-                    <div class="info-label">
-                        Enrollment Number
-                    </div>
+                st.caption("Roll Number")
 
-                    <div class="info-value">
-                        {enrollment}
-                    </div>
-                    """,
-                    unsafe_allow_html=True
+                st.write(
+                    roll_no
+                    or "Not Available"
                 )
 
 
-                st.markdown(
-                    f"""
-                    <div class="info-label">
-                        Roll Number
-                    </div>
+                st.caption("Enrollment Number")
 
-                    <div class="info-value">
-                        {roll_no}
-                    </div>
-                    """,
-                    unsafe_allow_html=True
+                st.write(
+                    enrollment
+                    or "Not Available"
                 )
 
 
-                st.markdown(
-                    f"""
-                    <div class="info-label">
-                        Department
-                    </div>
+                st.caption("Department")
 
-                    <div class="info-value">
-                        {department}
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-
-
-                st.markdown(
-                    f"""
-                    <div class="info-label">
-                        Semester
-                    </div>
-
-                    <div class="info-value">
-                        {semester}
-                    </div>
-                    """,
-                    unsafe_allow_html=True
+                st.write(
+                    department
+                    or "Not Available"
                 )
 
 
             # --------------------------------------------------
-            # COLUMN 2
+            # RIGHT
             # --------------------------------------------------
 
-            with c2:
+            with student_basic_col2:
 
-                st.markdown(
-                    f"""
-                    <div class="info-label">
-                        Gender
-                    </div>
+                st.caption("Semester")
 
-                    <div class="info-value">
-                        {gender}
-                    </div>
-                    """,
-                    unsafe_allow_html=True
+                st.write(
+                    semester
+                    or "Not Available"
                 )
 
 
-                st.markdown(
-                    f"""
-                    <div class="info-label">
-                        Date of Birth
-                    </div>
+                st.caption("Gender")
 
-                    <div class="info-value">
-                        {dob}
-                    </div>
-                    """,
-                    unsafe_allow_html=True
+                st.write(
+                    gender
+                    or "Not Available"
                 )
 
 
-                st.markdown(
-                    f"""
-                    <div class="info-label">
-                        Blood Group
-                    </div>
+                st.caption("Student Status")
 
-                    <div class="info-value">
-                        {blood_group}
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-
-
-                st.markdown(
-                    f"""
-                    <div class="info-label">
-                        Student Status
-                    </div>
-
-                    <div class="info-value">
-                        {student_status}
-                    </div>
-                    """,
-                    unsafe_allow_html=True
+                st.write(
+                    student_status
+                    or "Not Available"
                 )
 
 
     # ==========================================================
-    # STUDENT CONTACT
+    # STUDENT PERSONAL INFORMATION
     # ==========================================================
 
-    st.markdown(
-        '<div class="section-title">Student Contact Information</div>',
-        unsafe_allow_html=True
-    )
+    st.subheader("Student Personal Information")
 
 
-    contact_col1, contact_col2 = st.columns(2)
+    student_personal_col1, student_personal_col2 = st.columns(2)
 
 
-    with contact_col1:
+    with student_personal_col1:
 
         with st.container(border=True):
 
-            st.markdown(
-                f"""
-                <div class="info-label">
-                    Email Address
-                </div>
+            st.caption("Date of Birth")
 
-                <div class="info-value">
-                    {student_email}
-                </div>
-                """,
-                unsafe_allow_html=True
+            st.write(
+                dob
+                or "Not Available"
             )
 
 
-    with contact_col2:
+            st.caption("Blood Group")
+
+            st.write(
+                blood_group
+                or "Not Available"
+            )
+
+
+    with student_personal_col2:
 
         with st.container(border=True):
 
-            st.markdown(
-                f"""
-                <div class="info-label">
-                    Phone Number
-                </div>
+            st.caption("Student ID")
 
-                <div class="info-value">
-                    {student_phone}
-                </div>
-                """,
-                unsafe_allow_html=True
+            st.write(
+                student_id
+                or "Not Available"
+            )
+
+
+            st.caption("Account Status")
+
+            st.write(
+                account_status
+                or "Not Available"
+            )
+
+
+    # ==========================================================
+    # STUDENT CONTACT INFORMATION
+    # ==========================================================
+
+    st.subheader("Student Contact Information")
+
+
+    student_contact_col1, student_contact_col2 = st.columns(2)
+
+
+    with student_contact_col1:
+
+        with st.container(border=True):
+
+            st.caption("Email Address")
+
+            st.write(
+                student_email
+                or "Not Available"
+            )
+
+
+    with student_contact_col2:
+
+        with st.container(border=True):
+
+            st.caption("Phone Number")
+
+            st.write(
+                student_phone
+                or "Not Available"
             )
 
 
@@ -1318,171 +1629,73 @@ def parent_profile():
     # STUDENT ADDRESS
     # ==========================================================
 
-    student_full_address = (
-        f"{student_address}, "
-        f"{city}, "
-        f"{state} - "
-        f"{pincode}"
-    )
+    st.subheader("Student Address")
 
 
-    st.markdown(
-        f"""
-        <div class="address-card">
-            Student Address<br>
-            <strong>{student_full_address}</strong>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    with st.container(border=True):
+
+        student_address_parts = []
 
 
-    # ==========================================================
-    # PARENT INFORMATION
-    # ==========================================================
-
-    st.markdown(
-        '<div class="section-title">Parent Information</div>',
-        unsafe_allow_html=True
-    )
-
-
-    parent_col1, parent_col2 = st.columns(2)
-
-
-    # ==========================================================
-    # FATHER / MOTHER
-    # ==========================================================
-
-    with parent_col1:
-
-        with st.container(border=True):
-
-            st.subheader(
-                "Father Information"
-            )
-
-            st.markdown(
-                f"""
-                <div class="info-label">
-                    Father Name
-                </div>
-
-                <div class="info-value">
-                    {father_name}
-                </div>
-                """,
-                unsafe_allow_html=True
+        if student_address:
+            student_address_parts.append(
+                str(student_address)
             )
 
 
-            st.markdown(
-                f"""
-                <div class="info-label">
-                    Occupation
-                </div>
-
-                <div class="info-value">
-                    {occupation}
-                </div>
-                """,
-                unsafe_allow_html=True
+        if city:
+            student_address_parts.append(
+                str(city)
             )
 
 
-            st.markdown(
-                f"""
-                <div class="info-label">
-                    Mobile Number
-                </div>
-
-                <div class="info-value">
-                    {parent_phone}
-                </div>
-                """,
-                unsafe_allow_html=True
+        if state:
+            student_address_parts.append(
+                str(state)
             )
+
+
+        student_full_address = ", ".join(
+            student_address_parts
+        )
+
+
+        if pincode:
+
+            if student_full_address:
+
+                student_full_address += (
+                    f" - {pincode}"
+                )
+
+            else:
+
+                student_full_address = str(
+                    pincode
+                )
+
+
+        st.write(
+            student_full_address
+            or "Address not available"
+        )
 
 
     # ==========================================================
-    # MOTHER / EMAIL
+    # ACCOUNT
     # ==========================================================
 
-    with parent_col2:
-
-        with st.container(border=True):
-
-            st.subheader(
-                "Mother Information"
-            )
-
-            st.markdown(
-                f"""
-                <div class="info-label">
-                    Mother Name
-                </div>
-
-                <div class="info-value">
-                    {mother_name}
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+    st.subheader("Account")
 
 
-            st.markdown(
-                f"""
-                <div class="info-label">
-                    Parent Email
-                </div>
+    if st.button(
+        "🔒 Change Password",
+        use_container_width=True
+    ):
 
-                <div class="info-value">
-                    {parent_email}
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-
-
-            st.markdown(
-                f"""
-                <div class="info-label">
-                    Account Status
-                </div>
-
-                <div class="info-value">
-                    {account_status}
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-
-
-    # ==========================================================
-    # PARENT ADDRESS
-    # ==========================================================
-
-    st.markdown(
-        f"""
-        <div class="address-card">
-            Parent Address<br>
-            <strong>{parent_address}</strong>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-
-
-
-
-
-
-
-
-
-
-
+        st.info(
+            "Password change feature will be available soon."
+        )
 
 
 def parent_attendance():

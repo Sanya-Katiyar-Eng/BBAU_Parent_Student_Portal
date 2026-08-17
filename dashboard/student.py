@@ -606,7 +606,7 @@ def student_dashboard():
 #=================================================================
 def student_profile_form():
 
-    st.title("🎓 Complete Your Student Profile")
+    st.title(" Complete Your Student Profile")
     st.info("Please complete your profile before accessing the dashboard.")
 
     with st.form("student_profile_form"):

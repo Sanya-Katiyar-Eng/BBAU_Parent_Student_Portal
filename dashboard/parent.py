@@ -1070,7 +1070,7 @@ def show_parent_profile(parent_id):
 
 
     st.subheader(
-        "👨‍👩‍👧 Parent Profile"
+        " Parent Profile"
     )
 
 

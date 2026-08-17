@@ -3470,46 +3470,1027 @@ def teacher_assignments():
 
 def teacher_profile():
 
-    st.title("My Profile")
-    st.divider()
-
-    # Replace these values with database data
     teacher = get_teacher_profile(
         st.session_state.user_id
-)
+    )
+
+    # ==========================================================
+    # DEFAULT PROFILE AVATAR
+    # ==========================================================
+
+    avatar_html = """
+    <div style="
+        width:110px;
+        height:110px;
+        border-radius:50%;
+        background:#eef2f7;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        border:4px solid #ffffff;
+        box-shadow:0 4px 15px rgba(0,0,0,0.10);
+        font-size:52px;
+        color:#7b8794;
+        margin:auto;
+    ">
+        👤
+    </div>
+    """
+
+    # ==========================================================
+    # PROFILE HEADER
+    # ==========================================================
+
+    st.markdown("""
+    <style>
+
+    .profile-header {
+        background: linear-gradient(135deg, #f8fafc, #eef3f8);
+        border: 1px solid #e2e8f0;
+        border-radius: 18px;
+        padding: 28px;
+        margin-bottom: 25px;
+    }
+
+    .profile-name {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 5px;
+    }
+
+    .profile-role {
+        font-size: 15px;
+        color: #64748b;
+        margin-bottom: 12px;
+    }
+
+    .profile-meta {
+        display:flex;
+        gap:10px;
+        flex-wrap:wrap;
+    }
+
+    .profile-badge {
+        background:#ffffff;
+        border:1px solid #dbe3ec;
+        padding:6px 12px;
+        border-radius:20px;
+        font-size:13px;
+        color:#475569;
+    }
+
+    .active-badge {
+        background:#ecfdf3;
+        color:#15803d;
+        border:1px solid #bbf7d0;
+        padding:6px 12px;
+        border-radius:20px;
+        font-size:13px;
+        font-weight:600;
+    }
+
+    .section-title {
+        font-size:20px;
+        font-weight:700;
+        color:#1e293b;
+        margin:25px 0 14px 0;
+    }
+
+    .info-card {
+        background:#ffffff;
+        border:1px solid #e2e8f0;
+        border-radius:14px;
+        padding:18px;
+        margin-bottom:15px;
+        min-height:75px;
+    }
+
+    .info-label {
+        font-size:12px;
+        color:#64748b;
+        margin-bottom:6px;
+        font-weight:500;
+    }
+
+    .info-value {
+        font-size:15px;
+        color:#1e293b;
+        font-weight:600;
+        word-break:break-word;
+    }
+
+    .address-card {
+        background:#ffffff;
+        border:1px solid #e2e8f0;
+        border-radius:14px;
+        padding:18px;
+        margin-bottom:20px;
+    }
+
+    </style>
+    """, unsafe_allow_html=True)
+
+
+    # ==========================================================
+    # HEADER
+    # ==========================================================
+
+    st.markdown('<div class="profile-header">', unsafe_allow_html=True)
+
+    header_col1, header_col2 = st.columns([1, 4])
+
+    with header_col1:
+        st.markdown(avatar_html, unsafe_allow_html=True)
+
+    with header_col2:
+
+        teacher_name = teacher.get("teacher_name") or "Teacher"
+
+        designation = teacher.get("designation") or "Faculty Member"
+
+        department = teacher.get("department") or "Department"
+
+        employee_id = teacher.get("employee_id") or "Not Available"
+
+        st.markdown(
+            f"""
+            <div style="padding-top:8px;">
+
+                <div class="profile-name">
+                    {teacher_name}
+                </div>
+
+                <div class="profile-role">
+                    {designation} · {department}
+                </div>
+
+                <div class="profile-meta">
+
+                    <span class="profile-badge">
+                        Employee ID: {employee_id}
+                    </span>
+
+                    <span class="profile-badge">
+                        {department}
+                    </span>
+
+                    <span class="active-badge">
+                        ● Active
+                    </span>
+
+                </div>
+
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+
+    # ==========================================================
+    # PERSONAL INFORMATION
+    # ==========================================================
+
+    st.markdown(
+        '<div class="section-title">Personal Information</div>',
+        unsafe_allow_html=True
+    )
+
     col1, col2 = st.columns(2)
 
     with col1:
-        st.text_input("Teacher Name", teacher["teacher_name"], disabled=True)
-        st.text_input("Employee ID", teacher["employee_id"], disabled=True)
-        st.text_input("Department", teacher["department"], disabled=True)
-        st.text_input("Designation", teacher["designation"], disabled=True)
-        st.text_input("Qualification", teacher["qualification"], disabled=True)
-        st.text_input("Experience", teacher["experience"], disabled=True)
+
+        st.markdown(
+            f"""
+            <div class="info-card">
+                <div class="info-label">Gender</div>
+                <div class="info-value">
+                    {teacher.get("gender") or "Not Available"}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        st.markdown(
+            f"""
+            <div class="info-card">
+                <div class="info-label">Date of Birth</div>
+                <div class="info-value">
+                    {teacher.get("date_of_birth") or "Not Available"}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        st.markdown(
+            f"""
+            <div class="info-card">
+                <div class="info-label">Phone</div>
+                <div class="info-value">
+                    {teacher.get("phone") or "Not Available"}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
     with col2:
-        st.text_input("Email", teacher["email"], disabled=True)
-        st.text_input("Phone", teacher["phone"], disabled=True)
-        st.text_input("Gender", teacher["gender"], disabled=True)
-        st.text_input("Date of Birth", teacher["date_of_birth"], disabled=True)
-        st.text_input("Joining Date", teacher["joining_date"], disabled=True)
-        st.text_input("Employment Type", teacher["employment_type"], disabled=True)
-        st.text_input("University", teacher["university"], disabled=True)
 
-    st.text_area(
-        "Address",
-        teacher["address"],
-        disabled=True,
-        height=80
+        st.markdown(
+            f"""
+            <div class="info-card">
+                <div class="info-label">Email</div>
+                <div class="info-value">
+                    {teacher.get("email") or "Not Available"}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        st.markdown(
+            f"""
+            <div class="info-card">
+                <div class="info-label">Employment Type</div>
+                <div class="info-value">
+                    {teacher.get("employment_type") or "Not Available"}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        st.markdown(
+            f"""
+            <div class="info-card">
+                <div class="info-label">University</div>
+                <div class="info-value">
+                    {teacher.get("university") or "BBAU"}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+
+    # ==========================================================
+    # PROFESSIONAL INFORMATION
+    # ==========================================================
+
+    st.markdown(
+        '<div class="section-title">Professional Information</div>',
+        unsafe_allow_html=True
+    )
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+
+        st.markdown(
+            f"""
+            <div class="info-card">
+                <div class="info-label">Department</div>
+                <div class="info-value">
+                    {teacher.get("department") or "Not Available"}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        st.markdown(
+            f"""
+            <div class="info-card">
+                <div class="info-label">Designation</div>
+                <div class="info-value">
+                    {teacher.get("designation") or "Not Available"}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        st.markdown(
+            f"""
+            <div class="info-card">
+                <div class="info-label">Qualification</div>
+                <div class="info-value">
+                    {teacher.get("qualification") or "Not Available"}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+    with col2:
+
+        st.markdown(
+            f"""
+            <div class="info-card">
+                <div class="info-label">Experience</div>
+                <div class="info-value">
+                    {teacher.get("experience") or "Not Available"}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        st.markdown(
+            f"""
+            <div class="info-card">
+                <div class="info-label">Joining Date</div>
+                <div class="info-value">
+                    {teacher.get("joining_date") or "Not Available"}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        st.markdown(
+            f"""
+            <div class="info-card">
+                <div class="info-label">Employee ID</div>
+                <div class="info-value">
+                    {teacher.get("employee_id") or "Not Available"}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+
+    # ==========================================================
+    # ADDRESS
+    # ==========================================================
+
+    st.markdown(
+        '<div class="section-title">Contact Address</div>',
+        unsafe_allow_html=True
+    )
+
+    st.markdown(
+        f"""
+        <div class="address-card">
+
+            <div class="info-label">
+                Address
+            </div>
+
+            <div class="info-value">
+                {teacher.get("address") or "Address not available"}
+            </div>
+
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+    # ==========================================================
+    # ACCOUNT ACTION
+    # ==========================================================
+
+    st.markdown(
+        '<div class="section-title">Account</div>',
+        unsafe_allow_html=True
+    )
+
+    if st.button(
+        "🔒  Change Password",
+        use_container_width=True
+    ):
+        st.info(
+            "Password change feature will be available soon."
+        )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def parent_profile():
+
+    # ==========================================================
+    # GET PROFILE DATA
+    # ==========================================================
+
+    profile = get_parent_profile()
+
+    if not profile:
+
+        st.error(
+            "Profile information could not be found."
+        )
+
+        return
+
+
+    # ==========================================================
+    # UNPACK DATABASE DATA
+    # ==========================================================
+
+    (
+        parent_id,
+        student_id,
+
+        father_name,
+        mother_name,
+        occupation,
+        parent_phone,
+        parent_email,
+        parent_address,
+
+        student_name,
+        roll_no,
+        enrollment,
+        department,
+        semester,
+        gender,
+        dob,
+        blood_group,
+
+        student_email,
+        student_phone,
+        student_address,
+        city,
+        state,
+        pincode,
+
+        photo,
+        student_status,
+        account_status
+
+    ) = profile
+
+
+    # ==========================================================
+    # PAGE HEADER
+    # ==========================================================
+
+    st.title("My Profile")
+
+    st.caption(
+        "Parent profile and linked student information"
     )
 
     st.divider()
 
-    if st.button("Change Password", use_container_width=True):
-        st.info("Password change feature will be available soon.")
+
+    # ==========================================================
+    # PARENT PROFILE HEADER
+    # ==========================================================
+
+    with st.container(border=True):
+
+        header_col1, header_col2 = st.columns(
+            [1, 4]
+        )
 
 
+        # ------------------------------------------------------
+        # DEFAULT PARENT AVATAR
+        # ------------------------------------------------------
 
+        with header_col1:
+
+            st.image(
+                "https://avatar.iran.liara.run/public",
+                width=120
+            )
+
+
+        # ------------------------------------------------------
+        # PARENT BASIC INFORMATION
+        # ------------------------------------------------------
+
+        with header_col2:
+
+            parent_display_name = (
+                father_name
+                or mother_name
+                or "Parent"
+            )
+
+            st.subheader(
+                parent_display_name
+            )
+
+            st.caption(
+                "Parent / Guardian"
+            )
+
+
+            info_col1, info_col2 = st.columns(2)
+
+
+            with info_col1:
+
+                st.caption(
+                    "Mobile Number"
+                )
+
+                st.write(
+                    parent_phone
+                    or "Not Available"
+                )
+
+
+            with info_col2:
+
+                st.caption(
+                    "Email Address"
+                )
+
+                st.write(
+                    parent_email
+                    or "Not Available"
+                )
+
+
+            st.success(
+                f"● {account_status or 'Active'}"
+            )
+
+
+    # ==========================================================
+    # PARENT INFORMATION
+    # ==========================================================
+
+    st.subheader(
+        "Parent Information"
+    )
+
+
+    parent_col1, parent_col2 = st.columns(2)
+
+
+    # ----------------------------------------------------------
+    # FATHER INFORMATION
+    # ----------------------------------------------------------
+
+    with parent_col1:
+
+        with st.container(border=True):
+
+            st.markdown(
+                "### Father Information"
+            )
+
+
+            st.caption(
+                "Father Name"
+            )
+
+            st.write(
+                father_name
+                or "Not Available"
+            )
+
+
+            st.caption(
+                "Occupation"
+            )
+
+            st.write(
+                occupation
+                or "Not Available"
+            )
+
+
+            st.caption(
+                "Mobile Number"
+            )
+
+            st.write(
+                parent_phone
+                or "Not Available"
+            )
+
+
+    # ----------------------------------------------------------
+    # MOTHER INFORMATION
+    # ----------------------------------------------------------
+
+    with parent_col2:
+
+        with st.container(border=True):
+
+            st.markdown(
+                "### Mother Information"
+            )
+
+
+            st.caption(
+                "Mother Name"
+            )
+
+            st.write(
+                mother_name
+                or "Not Available"
+            )
+
+
+            st.caption(
+                "Parent Email"
+            )
+
+            st.write(
+                parent_email
+                or "Not Available"
+            )
+
+
+            st.caption(
+                "Account Status"
+            )
+
+            st.write(
+                account_status
+                or "Not Available"
+            )
+
+
+    # ==========================================================
+    # PARENT ADDRESS
+    # ==========================================================
+
+    st.subheader(
+        "Contact Address"
+    )
+
+
+    with st.container(border=True):
+
+        st.caption(
+            "Parent Address"
+        )
+
+        st.write(
+            parent_address
+            or "Address not available"
+        )
+
+
+    # ==========================================================
+    # LINKED STUDENT INFORMATION
+    # ==========================================================
+
+    st.divider()
+
+    st.subheader(
+        "Student Information"
+    )
+
+    st.caption(
+        "Academic and personal information of your linked student"
+    )
+
+
+    # ==========================================================
+    # STUDENT PROFILE CARD
+    # ==========================================================
+
+    with st.container(border=True):
+
+        student_col1, student_col2 = st.columns(
+            [1, 3]
+        )
+
+
+        # ------------------------------------------------------
+        # STUDENT PHOTO
+        # ------------------------------------------------------
+
+        with student_col1:
+
+            if photo:
+
+                st.image(
+                    photo,
+                    width=150
+                )
+
+            else:
+
+                # Same default unknown-person avatar
+                # used in teacher profile
+
+                st.image(
+                    "https://avatar.iran.liara.run/public",
+                    width=150
+                )
+
+
+        # ------------------------------------------------------
+        # STUDENT BASIC INFORMATION
+        # ------------------------------------------------------
+
+        with student_col2:
+
+            st.subheader(
+                student_name
+                or "Student"
+            )
+
+
+            st.caption(
+                f"{department or 'Department'}"
+                f" • Semester {semester or 'N/A'}"
+            )
+
+
+            student_basic_col1, student_basic_col2 = st.columns(2)
+
+
+            # --------------------------------------------------
+            # LEFT SIDE
+            # --------------------------------------------------
+
+            with student_basic_col1:
+
+                st.caption(
+                    "Roll Number"
+                )
+
+                st.write(
+                    roll_no
+                    or "Not Available"
+                )
+
+
+                st.caption(
+                    "Enrollment Number"
+                )
+
+                st.write(
+                    enrollment
+                    or "Not Available"
+                )
+
+
+                st.caption(
+                    "Department"
+                )
+
+                st.write(
+                    department
+                    or "Not Available"
+                )
+
+
+            # --------------------------------------------------
+            # RIGHT SIDE
+            # --------------------------------------------------
+
+            with student_basic_col2:
+
+                st.caption(
+                    "Semester"
+                )
+
+                st.write(
+                    semester
+                    or "Not Available"
+                )
+
+
+                st.caption(
+                    "Gender"
+                )
+
+                st.write(
+                    gender
+                    or "Not Available"
+                )
+
+
+                st.caption(
+                    "Student Status"
+                )
+
+                st.write(
+                    student_status
+                    or "Not Available"
+                )
+
+
+    # ==========================================================
+    # STUDENT PERSONAL INFORMATION
+    # ==========================================================
+
+    st.subheader(
+        "Student Personal Information"
+    )
+
+
+    student_personal_col1, student_personal_col2 = st.columns(2)
+
+
+    # ----------------------------------------------------------
+    # PERSONAL INFORMATION LEFT
+    # ----------------------------------------------------------
+
+    with student_personal_col1:
+
+        with st.container(border=True):
+
+            st.caption(
+                "Date of Birth"
+            )
+
+            st.write(
+                dob
+                or "Not Available"
+            )
+
+
+            st.caption(
+                "Blood Group"
+            )
+
+            st.write(
+                blood_group
+                or "Not Available"
+            )
+
+
+    # ----------------------------------------------------------
+    # PERSONAL INFORMATION RIGHT
+    # ----------------------------------------------------------
+
+    with student_personal_col2:
+
+        with st.container(border=True):
+
+            st.caption(
+                "Student ID"
+            )
+
+            st.write(
+                student_id
+                or "Not Available"
+            )
+
+
+            st.caption(
+                "Account Status"
+            )
+
+            st.write(
+                account_status
+                or "Not Available"
+            )
+
+
+    # ==========================================================
+    # STUDENT CONTACT INFORMATION
+    # ==========================================================
+
+    st.subheader(
+        "Student Contact Information"
+    )
+
+
+    student_contact_col1, student_contact_col2 = st.columns(2)
+
+
+    # ----------------------------------------------------------
+    # EMAIL
+    # ----------------------------------------------------------
+
+    with student_contact_col1:
+
+        with st.container(border=True):
+
+            st.caption(
+                "Email Address"
+            )
+
+            st.write(
+                student_email
+                or "Not Available"
+            )
+
+
+    # ----------------------------------------------------------
+    # PHONE
+    # ----------------------------------------------------------
+
+    with student_contact_col2:
+
+        with st.container(border=True):
+
+            st.caption(
+                "Phone Number"
+            )
+
+            st.write(
+                student_phone
+                or "Not Available"
+            )
+
+
+    # ==========================================================
+    # STUDENT ADDRESS
+    # ==========================================================
+
+    st.subheader(
+        "Student Address"
+    )
+
+
+    with st.container(border=True):
+
+        st.caption(
+            "Address"
+        )
+
+
+        student_address_parts = []
+
+
+        if student_address:
+
+            student_address_parts.append(
+                str(student_address)
+            )
+
+
+        if city:
+
+            student_address_parts.append(
+                str(city)
+            )
+
+
+        if state:
+
+            student_address_parts.append(
+                str(state)
+            )
+
+
+        student_full_address = ", ".join(
+            student_address_parts
+        )
+
+
+        if pincode:
+
+            if student_full_address:
+
+                student_full_address += (
+                    f" - {pincode}"
+                )
+
+            else:
+
+                student_full_address = str(
+                    pincode
+                )
+
+
+        st.write(
+            student_full_address
+            or "Address not available"
+        )
+
+
+    # ==========================================================
+    # ACCOUNT
+    # ==========================================================
+
+    st.subheader(
+        "Account"
+    )
+
+
+    if st.button(
+        "🔒 Change Password",
+        use_container_width=True
+    ):
+
+        st.info(
+            "Password change feature will be available soon."
+        )
 
 
 

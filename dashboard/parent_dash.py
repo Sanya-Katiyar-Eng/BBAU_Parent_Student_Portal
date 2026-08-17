@@ -1,6 +1,5 @@
 import streamlit as st
 import streamlit.components.v1 as components
-from streamlit_javascript import st_javascript
 from database.db import get_connection
 from database.notification_db import save_fcm_token
 from database.dashboard_db import (

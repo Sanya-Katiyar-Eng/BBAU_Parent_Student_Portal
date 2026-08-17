@@ -1,12 +1,11 @@
 import os
+import streamlit as st
 import psycopg2
 from dotenv import load_dotenv
 
 load_dotenv(override=True)
-
-DATABASE_URL = os.getenv("DATABASE_URL")
-print("DATABASE_URL EXISTS:", bool(DATABASE_URL))
-print("DATABASE HOST:", DATABASE_URL.split("@")[1].split("/")[0] if DATABASE_URL else "NONE")  
+DATABASE_URL = st.secrets.get("DATABASE_URL", os.getenv("DATABASE_URL"))
+#DATABASE_URL = os.getenv("DATABASE_URL")
 
 def get_connection():
 

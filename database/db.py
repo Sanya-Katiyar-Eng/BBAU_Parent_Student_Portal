@@ -4,14 +4,24 @@ import psycopg2
 from dotenv import load_dotenv
 
 load_dotenv(override=True)
-DATABASE_URL = st.secrets.get("DATABASE_URL", os.getenv("DATABASE_URL"))
-#DATABASE_URL = os.getenv("DATABASE_URL")
+
+
+def get_database_url():
+
+    # Streamlit Cloud
+    try:
+        return st.secrets["DATABASE_URL"]
+    except Exception:
+        pass
+
+    # Local .env
+    return os.getenv("DATABASE_URL")
+
+
+DATABASE_URL = get_database_url()
+
 
 def get_connection():
-
-    if not DATABASE_URL:
-        raise RuntimeError("DATABASE_URL is not configured")
-
     return psycopg2.connect(
         DATABASE_URL,
         sslmode="require",

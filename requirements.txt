@@ -12,3 +12,4 @@ seaborn
 twilio
 Pillow
 openpyxl
+streamlit-javascript

@@ -315,13 +315,19 @@ def add_parent(parent_data):
         # Check Student Exists
         # -------------------------------
         cur.execute("""
-            SELECT student_id
+            SELECT student_id,roll_number
             FROM students
             WHERE student_id = %s;
         """, (parent_data["student_id"],))
 
         if cur.fetchone() is None:
             return False, "Student not found."
+
+        student = cur.fetchone()
+        if student is None:
+            return False, "Student not found."
+        student_id = student[0]
+        roll_number = student[1]
 
         # -------------------------------
         # Check Duplicate Phone
@@ -368,6 +374,7 @@ def add_parent(parent_data):
             )
             RETURNING parent_id;
         """, (
+            student_id,
             parent_data["student_id"],
             parent_data["parent_name"],
             parent_data["relation"],
@@ -394,7 +401,7 @@ def add_parent(parent_data):
             )
             VALUES (%s,%s,%s,%s,%s);
         """, (
-            parent_data["phone"],          # Username
+            roll_number,          # Username
             parent_data["password"],       # Temporary Password
             "parent",
             True,
@@ -928,9 +935,6 @@ def check_student_parent_exists(student_id):
 #=================================================================================================
 # create_parent_user(login_username, password)
 #=============================================================================================================
-from database.db import get_connection
-
-
 def create_parent_user(login_username, password):
     """
     Create login account for parent.
@@ -976,6 +980,24 @@ def create_parent_user(login_username, password):
         conn.close()
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #=====================================================================================================================
 # update_parent_password(parent_id, password)
 #===========================================================================================================
@@ -999,8 +1021,10 @@ def update_parent_password(parent_id, password):
             WHERE
                 role = 'parent'
                 AND login_username = (
-                    SELECT phone
-                    FROM parents
+                    SELECT s.roll_number
+                    FROM parents p
+                    JOIN student s
+                        ON p.student_id=s.student_id
                     WHERE parent_id = %s
                 );
         """, (
@@ -1023,6 +1047,21 @@ def update_parent_password(parent_id, password):
     finally:
         cur.close()
         conn.close()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #=================================================================================================
@@ -1302,6 +1341,26 @@ def get_parent_dashboard(parent_id):
 
     return data
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #=====================================================================================================================
 #
 #===========================================================================================================
@@ -1314,16 +1373,14 @@ def get_parent_profile():
     conn = get_connection()
     cur = conn.cursor()
 
-    user_id = st.session_state.user_id
-
-
+    student_id = st.session_state.student_id
 
     # Check parent table
     cur.execute("""
         SELECT *
         FROM parents
-        WHERE parent_id = %s
-    """, (user_id,))
+        WHERE student_id = %s
+    """, (student_id,))
 
     parent = cur.fetchone()
     print("Parent Table :", parent)
@@ -1333,12 +1390,12 @@ def get_parent_profile():
         SELECT *
         FROM students
         WHERE student_id = %s
-    """, (st.session_state.student_id,))
+    """, (student_id,))
 
     student = cur.fetchone()
     print("Student Table :", student)
 
-    # Original Query
+    # Final Query
     query = """
         SELECT
 
@@ -1375,10 +1432,10 @@ def get_parent_profile():
         INNER JOIN students s
             ON p.student_id = s.student_id
 
-        WHERE p.parent_id = %s
+        WHERE p.student_id = %s
     """
 
-    cur.execute(query, (user_id,))
+    cur.execute(query, (student_id,))
     profile = cur.fetchone()
 
     print("Final Query :", profile)
@@ -1387,6 +1444,21 @@ def get_parent_profile():
     conn.close()
 
     return profile
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

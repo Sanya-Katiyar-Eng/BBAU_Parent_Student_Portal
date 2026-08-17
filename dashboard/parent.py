@@ -31,7 +31,7 @@ from database.db import get_connection
 
 
 
-def parent_login(phone,password):
+'''def parent_login(phone,password):
 
 
     conn=get_connection()
@@ -70,7 +70,77 @@ def parent_login(phone,password):
         return parent
 
 
-    return None
+    return None'''
+
+from database.db import get_connection
+from werkzeug.security import check_password_hash
+
+
+from database.db import get_connection
+from werkzeug.security import check_password_hash
+
+#parent login
+def parent_login(roll_no, password):
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT
+            u.id AS user_id,
+            p.student_id,
+            u.password,
+            u.first_login
+        FROM users u
+        JOIN parents p
+            ON p.user_id = u.id
+        JOIN students s
+            ON s.student_id = p.student_id
+        WHERE u.login_username = %s
+          AND u.role = 'parent'
+          AND LOWER(u.account_status) = 'active'
+          AND s.roll_number = %s
+        """,
+        (
+            str(roll_no).strip(),
+            str(roll_no).strip()
+        )
+    )
+
+    user = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    if not user:
+        return None
+
+    user_id, student_id, stored_password, first_login = user
+
+    if not check_password_hash(stored_password, password):
+        return None
+
+    return {
+        "user_id": user_id,
+        "student_id": student_id,
+        "first_login": first_login
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #===========================================================================
 # ==========================================================

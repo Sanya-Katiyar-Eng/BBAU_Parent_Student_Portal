@@ -296,13 +296,25 @@ def get_registration_status(student_id):
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 #================================================================================================================
 #submit all form info
 #============================================================================================
 from database.db import get_connection
 from werkzeug.security import generate_password_hash
-
-
+##############################
 def save_student_profile(
     student_id,
     student_name,
@@ -362,6 +374,23 @@ def save_student_profile(
         ))
 
         # ==========================================================
+        # GET STUDENT ROLL NUMBER
+        # ==========================================================
+
+        cur.execute("""
+            SELECT roll_no
+            FROM students
+            WHERE student_id = %s
+        """, (student_id,))
+
+        student_data = cur.fetchone()
+
+        if not student_data:
+            raise Exception("Student not found.")
+
+        roll_no = student_data[0]
+
+        # ==========================================================
         # 2. CHECK PARENT LINKED TO THIS STUDENT
         # ==========================================================
 
@@ -382,27 +411,27 @@ def save_student_profile(
 
             parent_id = student_parent[0]
 
-            # Check if new phone belongs to another user
+            # Check if this roll number belongs to another user
             cur.execute("""
                 SELECT id
                 FROM users
                 WHERE login_username = %s
                 AND id != %s
             """, (
-                parent_phone,
+                roll_no,
                 parent_id
             ))
 
-            phone_taken = cur.fetchone()
+            roll_taken = cur.fetchone()
 
-            if phone_taken:
+            if roll_taken:
 
                 raise Exception(
-                    f"Parent mobile number {parent_phone} "
+                    f"Roll number {roll_no} "
                     f"is already used by another account."
                 )
 
-            # Update parent login
+            # Update parent login username = roll number
             cur.execute("""
                 UPDATE users
                 SET
@@ -411,7 +440,7 @@ def save_student_profile(
                     account_status = 'active'
                 WHERE id = %s
             """, (
-                parent_phone,
+                roll_no,
                 parent_id
             ))
 
@@ -444,11 +473,12 @@ def save_student_profile(
 
         else:
 
+            # Search parent user using student roll number
             cur.execute("""
                 SELECT id
                 FROM users
                 WHERE login_username = %s
-            """, (parent_phone,))
+            """, (roll_no,))
 
             existing_user = cur.fetchone()
 
@@ -503,7 +533,7 @@ def save_student_profile(
                     else:
 
                         raise Exception(
-                            f"Parent mobile number {parent_phone} "
+                            f"Roll number {roll_no} "
                             f"is already linked with another student."
                         )
 
@@ -578,7 +608,7 @@ def save_student_profile(
                     )
                     RETURNING id
                 """, (
-                    parent_phone,
+                    roll_no,
                     hashed_password
                 ))
 
@@ -635,6 +665,15 @@ def save_student_profile(
 
         cur.close()
         conn.close()
+
+
+
+
+
+
+
+
+
 
 #===============================================================================
 #student dashboard

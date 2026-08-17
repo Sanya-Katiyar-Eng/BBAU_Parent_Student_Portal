@@ -653,8 +653,8 @@ def show_login():
         else:
 
             username = st.text_input(
-                "Parent Mobile Number",
-                placeholder="Enter mobile number"
+                "Student roll_number",
+                placeholder="Enter roll number"
             )
 
 

@@ -644,19 +644,31 @@ def student_profile_form():
 
         pincode = st.text_input("Pincode")
 
-        st.subheader("👨 Parent Information")
+        st.subheader("Parent Information")
 
         father_name = st.text_input("Father Name")
+        if not father_name:
+            st.error("Father Name is required")
+            return
 
         mother_name = st.text_input("Mother Name")
+        if not mother_name:
+            st.error("Mother Name is required")
+            return
 
         parent_phone = st.text_input("Parent Mobile Number")
+        if not parent_phone:
+            st.error("parent phone num is required")
+        if parent_phone == phone:
+            st.error("Parent mobile number cannot be same as student's mobile number.")
+            return
 
         parent_email = st.text_input("Parent Email")
-
+        if not parent_email:
+            st.error("parent email required")
         occupation = st.text_input("Parent Occupation")
 
-        st.subheader("📷 Student Photo")
+        st.subheader(" Student Photo")
 
         photo = st.file_uploader(
             "Upload Passport Size Photo",

@@ -835,7 +835,7 @@ def show_activate_account():
 # ==========================================================
 # Create Password
 # ==========================================================
-'''def show_create_password():
+def show_create_password():
 
     st.title("Create Password")
 
@@ -892,7 +892,7 @@ def show_activate_account():
             st.error(
                 "Something went wrong."
             )
-'''
+
 
 def show_activate_account():
 

@@ -300,11 +300,11 @@ def get_registration_status(student_id):
 #submit all form info
 #============================================================================================
 from database.db import get_connection
+from werkzeug.security import generate_password_hash
+
 
 def save_student_profile(
-
     student_id,
-
     student_name,
     dob,
     gender,
@@ -315,13 +315,11 @@ def save_student_profile(
     city,
     state,
     pincode,
-
     father_name,
     mother_name,
     parent_phone,
     parent_email,
     occupation
-
 ):
 
     conn = get_connection()
@@ -329,133 +327,297 @@ def save_student_profile(
 
     try:
 
-        # ============================
-        # Update Student
-        # ============================
+        # ==========================================================
+        # 1. UPDATE STUDENT
+        # ==========================================================
 
         cur.execute("""
-
-        UPDATE students
-
-        SET
-
-        student_name=%s,
-        dob=%s,
-        gender=%s,
-        blood_group=%s,
-        email=%s,
-        phone=%s,
-        address=%s,
-        city=%s,
-        state=%s,
-        pincode=%s,
-
-        registration_status='Completed',
-        updated_at=CURRENT_TIMESTAMP
-
-        WHERE student_id=%s
-
-        """,
-
-        (
-
-        student_name,
-        dob,
-        gender,
-        blood_group,
-        email,
-        phone,
-        address,
-        city,
-        state,
-        pincode,
-
-        student_id
-
+            UPDATE students
+            SET
+                student_name = %s,
+                dob = %s,
+                gender = %s,
+                blood_group = %s,
+                email = %s,
+                phone = %s,
+                address = %s,
+                city = %s,
+                state = %s,
+                pincode = %s,
+                registration_status = 'Completed',
+                updated_at = CURRENT_TIMESTAMP
+            WHERE student_id = %s
+        """, (
+            student_name,
+            dob,
+            gender,
+            blood_group,
+            email,
+            phone,
+            address,
+            city,
+            state,
+            pincode,
+            student_id
         ))
 
-        # ============================
-        # Parent Login
-        # ============================
+        # ==========================================================
+        # 2. CHECK PARENT LINKED TO THIS STUDENT
+        # ==========================================================
 
         cur.execute("""
+            SELECT parent_id
+            FROM parents
+            WHERE student_id = %s
+        """, (student_id,))
 
-        INSERT INTO users
-        (
+        student_parent = cur.fetchone()
 
-        login_username,
-        password,
-        role
+        # ==========================================================
+        # CASE 1:
+        # Parent already linked with this student
+        # ==========================================================
 
-        )
+        if student_parent:
 
-        VALUES
+            parent_id = student_parent[0]
 
-        (
+            # Check if new phone belongs to another user
+            cur.execute("""
+                SELECT id
+                FROM users
+                WHERE login_username = %s
+                AND id != %s
+            """, (
+                parent_phone,
+                parent_id
+            ))
 
-        %s,
-        %s,
-        'parent'
+            phone_taken = cur.fetchone()
 
-        )
+            if phone_taken:
 
-        RETURNING id
+                raise Exception(
+                    f"Parent mobile number {parent_phone} "
+                    f"is already used by another account."
+                )
 
-        """,
+            # Update parent login
+            cur.execute("""
+                UPDATE users
+                SET
+                    login_username = %s,
+                    role = 'parent',
+                    account_status = 'active'
+                WHERE id = %s
+            """, (
+                parent_phone,
+                parent_id
+            ))
 
-        (
+            # Update parent information
+            cur.execute("""
+                UPDATE parents
+                SET
+                    father_name = %s,
+                    mother_name = %s,
+                    phone = %s,
+                    email = %s,
+                    occupation = %s,
+                    address = %s
+                WHERE parent_id = %s
+            """, (
+                father_name,
+                mother_name,
+                parent_phone,
+                parent_email,
+                occupation,
+                address,
+                parent_id
+            ))
 
-        parent_phone,
-        "Parent@123"
+        # ==========================================================
+        # CASE 2:
+        # This student has no parent linked,
+        # but parent login already exists
+        # ==========================================================
 
-        ))
+        else:
 
-        parent_id = cur.fetchone()[0]
+            cur.execute("""
+                SELECT id
+                FROM users
+                WHERE login_username = %s
+            """, (parent_phone,))
 
-        # ============================
-        # Parent Table
-        # ============================
+            existing_user = cur.fetchone()
 
-        cur.execute("""
+            if existing_user:
 
-        INSERT INTO parents
-        (
+                parent_id = existing_user[0]
 
-        parent_id,
-        student_id,
-        father_name,
-        mother_name,
-        phone,
-        email,
-        occupation,
-        address
+                # Check whether this parent already has
+                # a parent profile
+                cur.execute("""
+                    SELECT
+                        parent_id,
+                        student_id
+                    FROM parents
+                    WHERE parent_id = %s
+                """, (parent_id,))
 
-        )
+                existing_parent = cur.fetchone()
 
-        VALUES
+                # --------------------------------------------------
+                # Existing parent profile found
+                # --------------------------------------------------
 
-        (
+                if existing_parent:
 
-        %s,%s,%s,%s,%s,%s,%s,%s
+                    existing_student_id = existing_parent[1]
 
-        )
+                    # Parent belongs to same student
+                    if existing_student_id == student_id:
 
-        """,
+                        cur.execute("""
+                            UPDATE parents
+                            SET
+                                father_name = %s,
+                                mother_name = %s,
+                                phone = %s,
+                                email = %s,
+                                occupation = %s,
+                                address = %s
+                            WHERE parent_id = %s
+                        """, (
+                            father_name,
+                            mother_name,
+                            parent_phone,
+                            parent_email,
+                            occupation,
+                            address,
+                            parent_id
+                        ))
 
-        (
+                    # Parent belongs to another student
+                    else:
 
-        parent_id,
-        student_id,
-        father_name,
-        mother_name,
-        parent_phone,
-        parent_email,
-        occupation,
-        address
+                        raise Exception(
+                            f"Parent mobile number {parent_phone} "
+                            f"is already linked with another student."
+                        )
 
-        ))
+                # --------------------------------------------------
+                # User exists but parent profile does not exist
+                # --------------------------------------------------
+
+                else:
+
+                    cur.execute("""
+                        UPDATE users
+                        SET
+                            role = 'parent',
+                            account_status = 'active'
+                        WHERE id = %s
+                    """, (parent_id,))
+
+                    cur.execute("""
+                        INSERT INTO parents
+                        (
+                            parent_id,
+                            student_id,
+                            father_name,
+                            mother_name,
+                            phone,
+                            email,
+                            occupation,
+                            address
+                        )
+                        VALUES
+                        (
+                            %s,%s,%s,%s,%s,%s,%s,%s
+                        )
+                    """, (
+                        parent_id,
+                        student_id,
+                        father_name,
+                        mother_name,
+                        parent_phone,
+                        parent_email,
+                        occupation,
+                        address
+                    ))
+
+            # ======================================================
+            # CASE 3:
+            # Parent user does NOT exist → create new parent
+            # ======================================================
+
+            else:
+
+                hashed_password = generate_password_hash(
+                    "Parent@123"
+                )
+
+                cur.execute("""
+                    INSERT INTO users
+                    (
+                        login_username,
+                        password,
+                        role,
+                        first_login,
+                        account_status
+                    )
+                    VALUES
+                    (
+                        %s,
+                        %s,
+                        'parent',
+                        TRUE,
+                        'active'
+                    )
+                    RETURNING id
+                """, (
+                    parent_phone,
+                    hashed_password
+                ))
+
+                parent_id = cur.fetchone()[0]
+
+                cur.execute("""
+                    INSERT INTO parents
+                    (
+                        parent_id,
+                        student_id,
+                        father_name,
+                        mother_name,
+                        phone,
+                        email,
+                        occupation,
+                        address
+                    )
+                    VALUES
+                    (
+                        %s,%s,%s,%s,%s,%s,%s,%s
+                    )
+                """, (
+                    parent_id,
+                    student_id,
+                    father_name,
+                    mother_name,
+                    parent_phone,
+                    parent_email,
+                    occupation,
+                    address
+                ))
+
+        # ==========================================================
+        # 3. COMMIT
+        # ==========================================================
 
         conn.commit()
+
+        print("PROFILE UPDATED SUCCESSFULLY")
 
         return True
 
@@ -463,9 +625,11 @@ def save_student_profile(
 
         conn.rollback()
 
-        print(e)
+        print("=" * 60)
+        print("PROFILE UPDATE ERROR:", repr(e))
+        print("=" * 60)
 
-        return False
+        raise
 
     finally:
 

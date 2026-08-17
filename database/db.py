@@ -2,10 +2,11 @@ import os
 import psycopg2
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 DATABASE_URL = os.getenv("DATABASE_URL")
-
+print("DATABASE_URL EXISTS:", bool(DATABASE_URL))
+print("DATABASE HOST:", DATABASE_URL.split("@")[1].split("/")[0] if DATABASE_URL else "NONE")  
 
 def get_connection():
 
@@ -21,3 +22,6 @@ def get_connection():
         keepalives_interval=10,
         keepalives_count=5
     )
+
+
+

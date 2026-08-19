@@ -90,7 +90,7 @@ def get_student_attendance_last_5_days(student_id):
 
 
 
-def get_parent_attendance_last_5_days(parent_id):
+def get__last_5_days(parent_id):
     conn = get_connection()
     cur = conn.cursor()
 

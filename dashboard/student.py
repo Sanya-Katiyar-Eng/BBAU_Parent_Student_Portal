@@ -3,10 +3,11 @@ from database.student_db import *
 from database.student_db import (
     get_student_attendance_summary,
     get_today_attendance,
-    get_student_attendance_history
+    get_student_attendance_history,
+    get_student_today_attendance
 )
 from dashboard.parent_dash import parent_assignments
-from database.assignment import get_student_assignments,get_student_notices
+from database.assignment import get_student_notices,get_student_id_from_user,get_student_assignments
 from dashboard.parent_dash import parent_attendance
 from auth.login import normalize_text
 import pandas as pd
@@ -582,14 +583,11 @@ def student_dashboard():
     elif selected == "Class Timetable":
         student_timetable()
     elif selected == "Attendance":
-        parent_attendance()
+        student_attendance()
     elif selected == "Assignments":
-        parent_assignments(st.session_state.user_id)
+        student_id = st.session_state.user_id
 
-
-    st.markdown("</div>", unsafe_allow_html=True)
-
-
+        student_academic_work(student_id)
 
 
 
@@ -735,240 +733,319 @@ def student_profile_form():
 #==================================================================================================
 #student dashboard home
 #==========================================================================================================
-
-
-
 import streamlit as st
+
 
 def dashboard_home():
 
+    # =========================================================
+    # GET STUDENT ID
+    # =========================================================
+
     student_id = st.session_state.get("user_id")
 
-    # =====================================================
-    # DATABASE DATA
-    # =====================================================
+    # =========================================================
+    # FETCH DATA
+    # =========================================================
 
     profile = get_student_profile(student_id) or {}
-    summary = get_student_dashboard_summary(student_id) or {}
-    today_classes = get_student_today_classes(student_id) or []
-    notices = get_student_notices(student_id) or []
 
-    student_name = profile.get("student_name", "Student")
-    enrollment_no = profile.get("enrollment_no", "-")
-    department = profile.get("department", "-")
-    semester = profile.get("semester", "-")
+    summary = get_student_dashboard_summary(
+        student_id
+    ) or {}
 
-    attendance = float(summary.get("attendance", 0) or 0)
-    cgpa = float(summary.get("cgpa", 0) or 0)
-    courses = int(summary.get("courses", 0) or 0)
-    pending = int(summary.get("pending_assignments", 0) or 0)
+    today_classes = get_student_today_classes(
+        student_id
+    ) or []
 
-    # =====================================================
-    # LIGHT BLUE TITLE
-    # =====================================================
+    notices = get_student_notices(
+        student_id
+    ) or []
 
-    st.title("🎓 Student Dashboard")
+    try:
 
-    st.caption(
-        f"Welcome back, {student_name}! "
-        "Here's what's happening with your academic journey today."
+        today_attendance = get_today_attendance(
+            student_id
+        ) or []
+
+    except Exception as e:
+
+        print(
+            "TODAY ATTENDANCE ERROR:",
+            repr(e)
+        )
+
+        today_attendance = []
+
+    # =========================================================
+    # STUDENT INFORMATION
+    # =========================================================
+
+    student_name = profile.get(
+        "student_name",
+        "Student"
     )
 
-    # =====================================================
-    # STUDENT INFORMATION
-    # =====================================================
+    enrollment_no = profile.get(
+        "enrollment_no",
+        "-"
+    )
 
-    with st.container(border=True):
+    department = profile.get(
+        "department",
+        "-"
+    )
 
-        st.subheader(f"👋 Welcome, {student_name}")
+    semester = profile.get(
+        "semester",
+        "-"
+    )
 
-        col1, col2, col3 = st.columns(3)
+    # =========================================================
+    # ACADEMIC SUMMARY
+    # =========================================================
 
-        with col1:
-            st.info(
-                f"🆔 Enrollment\n\n{enrollment_no}"
+    attendance = float(
+        summary.get(
+            "attendance",
+            0
+        ) or 0
+    )
+
+    cgpa = float(
+        summary.get(
+            "cgpa",
+            0
+        ) or 0
+    )
+
+    courses = int(
+        summary.get(
+            "courses",
+            0
+        ) or 0
+    )
+
+    pending = int(
+        summary.get(
+            "pending_assignments",
+            0
+        ) or 0
+    )
+
+    # =========================================================
+    # PAGE TITLE
+    # =========================================================
+
+    st.title("Student Dashboard")
+
+    # =========================================================
+    # WELCOME
+    # =========================================================
+
+    st.success(
+        f"Welcome back, {student_name}"
+    )
+
+    st.caption(
+        f"Enrollment No: {enrollment_no}  |  "
+        f"Department: {department}  |  "
+        f"Semester: {semester}"
+    )
+
+    st.divider()
+
+    # =========================================================
+    # TODAY'S ATTENDANCE
+    # =========================================================
+
+    st.subheader(" Today's Attendance")
+
+    if today_attendance:
+
+        for item in today_attendance:
+
+            course_name = item.get(
+                "course_name",
+                "Course"
             )
 
-        with col2:
-            st.info(
-                f"🏢 Department\n\n{department}"
+            status = item.get(
+                "status",
+                "Not Marked"
             )
 
-        with col3:
-            st.info(
-                f"📚 Semester\n\n{semester}"
+            status = str(status).strip()
+
+            col1, col2 = st.columns(
+                [5, 1.3]
             )
 
-    st.write("")
+            with col1:
 
-    # =====================================================
-    # NOTICES + TODAY CLASSES
-    # =====================================================
-
-    notice_col, class_col = st.columns(2)
-
-    # -----------------------------------------------------
-    # NOTICES
-    # -----------------------------------------------------
-
-    with notice_col:
-
-        st.subheader("🔔 Notices")
-
-        if notices:
-
-            for notice in notices[:5]:
-
-                title = notice.get(
-                    "title",
-                    "Notice"
+                st.write(
+                    f" **{course_name}**"
                 )
 
-                description = notice.get(
-                    "description",
-                    ""
-                )
+            with col2:
 
-                notice_date = notice.get(
-                    "notice_date",
-                    ""
-                )
+                if status.lower() == "present":
 
-                with st.container(border=True):
+                    st.success(
+                        "Present",
+                        icon="✅"
+                    )
 
-                    st.write(f"**{title}**")
+                elif status.lower() == "absent":
 
-                    if notice_date:
-                        st.caption(
-                            f"📅 {notice_date}"
-                        )
+                    st.error(
+                        "Absent",
+                        icon="❌"
+                    )
 
-                    if description:
-                        st.caption(
-                            description
-                        )
+                else:
 
-        else:
+                    st.warning(
+                        status.capitalize(),
+                        icon="⚠️"
+                    )
 
-            st.info(
-                "No new notices available."
-            )
+    else:
 
-    # -----------------------------------------------------
+        st.info(
+            "No attendance has been marked today."
+        )
+
+    # =========================================================
     # TODAY'S CLASSES
-    # -----------------------------------------------------
+    # =========================================================
 
-    with class_col:
+    st.subheader("Today's Classes")
 
-        st.subheader("📅 Today's Classes")
+    if today_classes:
 
-        if today_classes:
+        for cls in today_classes:
 
-            for cls in today_classes:
-
-                course_name = cls.get(
-                    "course_name",
-                    "Course"
-                )
-
-                teacher_name = cls.get(
-                    "teacher_name",
-                    "Faculty"
-                )
-
-                start_time = cls.get(
-                    "start_time",
-                    ""
-                )
-
-                end_time = cls.get(
-                    "end_time",
-                    ""
-                )
-
-                with st.container(border=True):
-
-                    st.write(
-                        f"**{course_name}**"
-                    )
-
-                    if start_time:
-
-                        if end_time:
-
-                            st.caption(
-                                f"🕐 {start_time} - {end_time}"
-                            )
-
-                        else:
-
-                            st.caption(
-                                f"🕐 {start_time}"
-                            )
-
-                    st.caption(
-                        f"👨‍🏫 {teacher_name}"
-                    )
-
-        else:
-
-            st.info(
-                "No classes scheduled for today."
+            course_name = cls.get(
+                "course_name",
+                "Course"
             )
 
-    st.write("")
+            teacher_name = cls.get(
+                "teacher_name",
+                "Faculty"
+            )
 
-    # =====================================================
+            start_time = cls.get(
+                "start_time",
+                ""
+            )
+
+            end_time = cls.get(
+                "end_time",
+                ""
+            )
+
+            st.info(
+                f"**{course_name}**  |  "
+                f" {start_time} - {end_time}  |  "
+                f" {teacher_name}"
+            )
+
+    else:
+
+        st.info(
+            "No classes scheduled for today."
+        )
+
+    # =========================================================
+    # LATEST NOTICES
+    # =========================================================
+
+    st.subheader("🔔 Latest Notices")
+
+    if notices:
+
+        for notice in notices[:5]:
+
+            title = notice.get(
+                "title",
+                "Notice"
+            )
+
+            notice_type = notice.get(
+                "notice_type",
+                notice.get(
+                    "Type",
+                    "General"
+                )
+            )
+
+            course = notice.get(
+                "course",
+                notice.get(
+                    "Course",
+                    "General"
+                )
+            )
+
+            expiry_date = notice.get(
+                "expiry_date",
+                notice.get(
+                    "Expiry Date",
+                    ""
+                )
+            )
+
+            st.info(
+                f"🔔 **{title}**  |  "
+                f"Type: {notice_type}  |  "
+                f"Course: {course}  |  "
+                f"Valid till: {expiry_date}"
+            )
+
+    else:
+
+        st.info(
+            "No new notices available."
+        )
+
+    # =========================================================
     # ACADEMIC OVERVIEW
-    # =====================================================
+    # =========================================================
 
     st.subheader("📊 Academic Overview")
 
-    c1, c2, c3, c4 = st.columns(4)
+    col1, col2, col3, col4 = st.columns(4)
 
-    with c1:
+    with col1:
 
         st.metric(
             "Attendance",
             f"{attendance:.0f}%"
         )
 
-        st.progress(
-            min(max(attendance / 100, 0), 1)
-        )
-
-    with c2:
+    with col2:
 
         st.metric(
             "Current CGPA",
             f"{cgpa:.2f}"
         )
 
-        st.progress(
-            min(max(cgpa / 10, 0), 1)
-        )
-
-    with c3:
+    with col3:
 
         st.metric(
             "Enrolled Courses",
             courses
         )
 
-        st.progress(
-            min(max(courses / 10, 0), 1)
-        )
-
-    with c4:
+    with col4:
 
         st.metric(
             "Pending Assignments",
             pending
         )
 
-        st.progress(
-            min(max(pending / 5, 0), 1)
-        )
 
 
 
@@ -985,11 +1062,23 @@ def dashboard_home():
 
 
 
-def student_timetable():
+
+
+
+
+
+
+
+
+
+
+
+
+'''def student_timetable():
 
     student_id = st.session_state.get("user_id")
 
-    st.title("📅 My Timetable")
+    st.title(" My Timetable")
     st.caption("Weekly lecture schedule and room assignments")
 
     # =====================================================
@@ -1160,7 +1249,7 @@ def student_timetable():
                     f"**{room or 'N/A'}**"
                 )
 
-        st.write("")
+        st.write("")'''
 
 
 
@@ -1253,7 +1342,7 @@ def student_timetable():
     """, unsafe_allow_html=True)
 
     # Page Header
-    st.title("📅 My Timetable")
+    st.title(" My Timetable")
     st.caption("Weekly class schedule and venue details")
     st.divider()
 
@@ -1458,7 +1547,7 @@ def student_assignments(student_id):
     with st.spinner("Loading academic work..."):
         time.sleep(0.1)
         try:
-            assignments = get_assignments(student_id)
+            assignments = parent_assignments(student_id)
         except Exception as e:
             st.error("Unable to load assignments.")
             st.exception(e)
@@ -2236,3 +2325,217 @@ def student_profile(student_id):
         except Exception as e:
             st.error("Something went wrong while updating profile.")
             st.exception(e)
+
+
+
+
+
+def student_academic_work(student_id):
+
+    # =========================================================
+    # FETCH ASSIGNMENTS
+    # =========================================================
+
+    assignments = get_student_assignments(student_id)
+
+    st.title("Academic Work")
+    st.caption(
+        "Assignments, homework and projects assigned to the student"
+    )
+    st.divider()
+
+    # =========================================================
+    # EMPTY STATE
+    # =========================================================
+
+    if not assignments:
+        st.info(
+            "No assignments, homework or projects have been assigned yet."
+        )
+        return
+
+    # =========================================================
+    # SUMMARY
+    # =========================================================
+
+    total = len(assignments)
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.metric(
+            "📚 Total Work",
+            total
+        )
+
+    with col2:
+        st.metric(
+            "⏳ Pending",
+            total
+        )
+
+    st.divider()
+
+    # =========================================================
+    # ASSIGNMENTS
+    # =========================================================
+
+    st.subheader("Academic Work")
+
+    for assignment in assignments:
+
+        title = (
+            assignment.get("title")
+            or "Untitled Assignment"
+        )
+
+        course = (
+            assignment.get("course")
+            or "Unknown Course"
+        )
+
+        work_type = (
+            assignment.get("type")
+            or "Assignment"
+        )
+
+        teacher = (
+            assignment.get("teacher")
+            or "Teacher"
+        )
+
+        description = (
+            assignment.get("description")
+            or "No instructions provided."
+        )
+
+        due_date = assignment.get("due_date")
+
+        file_path = assignment.get("file_path")
+
+        # Date formatting
+        if due_date:
+            try:
+                due_display = due_date.strftime("%d %b %Y")
+            except:
+                due_display = str(due_date)
+        else:
+            due_display = "No Deadline"
+
+        # =====================================================
+        # ONE LINE / ONE CARD
+        # =====================================================
+
+        with st.container(border=True):
+
+            col1, col2, col3, col4 = st.columns(
+                [3, 2, 2, 1.5]
+            )
+
+            with col1:
+                st.write(
+                    f"**{title}**"
+                )
+
+            with col2:
+                st.caption(
+                    f"📚 {course}"
+                )
+
+            with col3:
+                st.caption(
+                    f"📝 {work_type}"
+                )
+
+            with col4:
+                st.caption(
+                    f"Due: {due_display}"
+                )
+
+            st.caption(
+                f"Teacher: {teacher}"
+            )
+
+            if description:
+                st.write(
+                    description
+                )
+
+            if file_path:
+
+                if str(file_path).startswith(
+                    ("http://", "https://")
+                ):
+                    st.link_button(
+                        "View Attachment",
+                        file_path
+                    )
+
+                else:
+                    st.caption(
+                        f"Attachment: {file_path}"
+                    )
+
+
+
+
+
+
+
+
+
+
+def student_attendance():
+
+    student_id = st.session_state.get("user_id")
+
+    st.title(" Attendance")
+
+    attendance = get_student_today_attendance(student_id)
+
+    if not attendance:
+        st.info("No attendance has been marked today.")
+        return
+
+    st.subheader("Today's Attendance")
+
+    for item in attendance:
+
+        course_name = item.get(
+            "course_name",
+            "Course"
+        )
+
+        status = item.get(
+            "status",
+            "Not Marked"
+        )
+
+        col1, col2 = st.columns([5, 1.3])
+
+        with col1:
+            st.write(
+                f" **{course_name}**"
+            )
+
+        with col2:
+
+            if str(status).lower() == "present":
+
+                st.success(
+                    "Present",
+                    icon="✅"
+                )
+
+            elif str(status).lower() == "absent":
+
+                st.error(
+                    "Absent",
+                    icon="❌"
+                )
+
+            else:
+
+                st.warning(
+                    str(status).capitalize()
+                )

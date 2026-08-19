@@ -9,7 +9,8 @@ from database.assignment import (
     add_notice,
     get_teacher_notices,
     update_notice,
-    delete_notice
+    delete_notice,
+    get_student_notices
 )
 from database.teacher_db import *
 from database.dashboard_db import *
@@ -1383,51 +1384,198 @@ from database.teacher_db import *
 
 def show_teacher_activity():
 
-    teacher = get_teacher_profile(st.session_state.user_id)
+    teacher = get_teacher_profile(
+        st.session_state.user_id
+    )
 
     teacher_id = teacher["teacher_id"]
 
-    left, right = st.columns([2,1])
+    # ==========================================================
+    # TODAY'S TIMETABLE
+    # ==========================================================
 
-    with left:
+    st.subheader("Today's Timetable")
 
-        st.subheader("Today's Timetable")
+    classes = get_today_classes(teacher_id)
 
-        classes = get_today_classes(teacher_id)
+    if classes:
 
-        if classes:
+        for cls in classes:
 
-            for cls in classes:
+            with st.container(border=True):
 
-                 st.info(
-            f"""
-Course : {cls[0]}
+                col1, col2, col3, col4, col5 = st.columns(
+                    [3, 1.2, 1.5, 2, 1.5]
+                )
 
-Semester : {cls[1]}
+                with col1:
+                    st.write(
+                        f"📚 **{cls[0]}**"
+                    )
 
-Day : {cls[2]}
+                with col2:
+                    st.caption(
+                        f"Sem: {cls[1]}"
+                    )
 
-Time : {cls[3]} - {cls[4]}
+                with col3:
+                    st.caption(
+                        f"📅 {cls[2]}"
+                    )
 
-Room : {cls[5]}
-"""
+                with col4:
+                    st.caption(
+                        f"🕐 {cls[3]} - {cls[4]}"
+                    )
+
+                with col5:
+                    st.caption(
+                        f"Room: {cls[5]}"
+                    )
+
+    else:
+
+        st.info(
+            "No classes scheduled for today."
         )
-        else:
-            st.info("No classes scheduled for today.")
 
-    with right:
 
-        st.subheader("Notice Board")
-
-        st.info("No notices.")
-
-    st.divider()
+    # ==========================================================
+    # RECENT ACADEMIC ACTIVITY
+    # ==========================================================
 
     st.subheader("Recent Academic Activity")
 
-    st.success("Dashboard loaded successfully.")
+    academic_work = get_teacher_assignments(
+        teacher_id
+    )
+
+    if academic_work:
+
+        for work in academic_work[:5]:
+
+            # IMPORTANT:
+            # Parent dashboard ke same keys use karo
+
+            title = (
+                work.get("title")
+                or work.get("Title")
+                or "Untitled"
+            )
+
+            course = (
+                work.get("course")
+                or work.get("Course")
+                or "N/A"
+            )
+
+            work_type = (
+                work.get("type")
+                or work.get("Type")
+                or "Assignment"
+            )
+
+            due_date = (
+                work.get("due_date")
+                or work.get("Due Date")
+                or "No due date"
+            )
+
+            with st.container(border=True):
+
+                col1, col2, col3 = st.columns(
+                    [4, 2, 1.5]
+                )
+
+                with col1:
+                    st.write(
+                        f"📝 **{title}**"
+                    )
+
+                with col2:
+                    st.caption(
+                        f"📚 {course}"
+                    )
+
+                with col3:
+                    st.caption(
+                        f"⏰ Due: {due_date}"
+                    )
+
+    else:
+
+        st.info(
+            "No academic activity yet."
+        )
 
 
+    # ==========================================================
+    # LATEST NOTICES
+    # ==========================================================
+
+    st.subheader("Latest Notices")
+
+    # Existing notice function use karo
+    student_notices = get_student_notices(
+        teacher_id
+    )
+
+    if student_notices:
+
+        for notice in student_notices[:5]:
+
+            title = (
+                notice.get("title")
+                or notice.get("Title")
+                or "Notice"
+            )
+
+            notice_type = (
+                notice.get("notice_type")
+                or notice.get("Type")
+                or "General"
+            )
+
+            course = (
+                notice.get("course")
+                or notice.get("Course")
+                or "General"
+            )
+
+            expiry_date = (
+                notice.get("expiry_date")
+                or notice.get("Expiry Date")
+                or "No expiry"
+            )
+
+            with st.container(border=True):
+
+                col1, col2, col3 = st.columns(
+                    [4, 2, 1.5]
+                )
+
+                with col1:
+                    st.write(
+                        f"🔔 **{title}**"
+                    )
+
+                with col2:
+                    st.caption(
+                        f"📚 {course}"
+                    )
+
+                with col3:
+                    st.caption(
+                        f"⏰ Until: {expiry_date}"
+                    )
+
+    else:
+
+        st.info(
+            "No active notices."
+        )
+
+    st.divider()
 
 
 

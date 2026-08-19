@@ -1,4 +1,5 @@
 import streamlit as st
+
 import streamlit.components.v1 as components
 from database.db import get_connection
 from database.notification_db import save_fcm_token
@@ -6,7 +7,7 @@ from database.dashboard_db import (
     get_student_attendance,
     get_student_attendance_percentage
 )
-from database.assignment import get_student_assignments,get_student_notices
+from database.assignment import get_student_notices,get_student_assignments
 from database.parent_db import (
     get_child_attendance_summary,
     get_child_today_attendance,
@@ -16,7 +17,7 @@ from database.parent_db import (
 # Database Functions
 # (Abhi sirf import kar rahe hain)
 # ===========================
-from database.student_db import get_student_timetable
+from database.student_db import get_student_timetable,get_today_attendance
 from database.parent_db import (
     get_parent_dashboard,
     get_parent_profile,
@@ -201,8 +202,7 @@ def parent_home():
 
 
     elif menu == "Assignments":
-
-        parent_assignments(student_id)
+        parent_assignments(st.session_state.user_id)
 
 
 
@@ -381,7 +381,7 @@ def parent_dashboard(parent_id):
 
     try:
 
-        academic_work = get_student_assignments(
+        academic_work = parent_assignments(
             student_id
         )
 
@@ -649,7 +649,7 @@ def parent_dashboard(parent_id):
 
     try:
 
-        today_attendance = get_today_student_attendance(
+        today_attendance = get_today_attendance(
             student_id
         )
 
@@ -737,7 +737,7 @@ def parent_dashboard(parent_id):
 
     try:
 
-        academic_work = get_student_assignments(
+        academic_work = parent_assignments(
             student_id
         )
 
@@ -997,13 +997,33 @@ def parent_dashboard(parent_id):
     # ==========================================================
 
     st.subheader("Today's Attendance")
+    today_attendance =  get_child_today_attendance(student_id)
+    if today_attendance:
+        for attendance in today_attendance:
+            course_name = attendance[0]
+            status = attendance[1]
+            if status.lower() == "present":
+                st.success(f" **{course_name}**  —   Present")
+            elif status.lower() == "absent":
+                st.error(f" **{course_name}**  —   Absent")
+            else:
+                st.info(f" **{course_name}**  —  {status}")
+
+    else:
+        today_class =  get_child_today_attendance(student_id)
+        if today_class:
+            st.info("Today's class is scheduled, but attendance has not been taken yet.")
+        else:
+             st.info("There is no class scheduled for you today.")
+    
+
+
+
+
+
 
     # Abhi function baad me banayenge
     # Isliye temporary message dikha rahe hain
-
-    st.info(
-        "Today's attendance will appear here."
-    )
 
 
     # ==========================================================
@@ -1013,68 +1033,33 @@ def parent_dashboard(parent_id):
     st.subheader(
         "Recent Academic Work"
     )
-
+    #
     academic_work = get_student_assignments(
         student_id
     )
 
     if academic_work:
 
-        academic_work = academic_work[:5]
 
-        for work in academic_work:
-
-            title = (
-                work.get("title", "Untitled")
-                or "Untitled"
-            )
-
-            course = (
-                work.get("course", "N/A")
-                or "N/A"
-            )
-
-            work_type = (
-                work.get("type", "Assignment")
-                or "Assignment"
-            )
-
-            due_date = (
-                work.get("due_date", "Not specified")
-                or "Not specified"
-            )
-
+        for work in academic_work[:5]:
+            title = work.get("title", "Untitled") or "Untitled"
+            course = work.get("course", "N/A") or "N/A"
+            work_type = work.get("type", "Assignment") or "Assignment"
+            due_date = work.get("due_date")
+            if due_date:
+                due_text = str(due_date)
+            else:
+                due_text = "No due date"
             with st.container(border=True):
-
-                col1, col2, col3, col4 = st.columns(
-                    [3, 2, 2, 1.5]
-                )
-
+                col1, col2, col3 = st.columns([4, 2, 1.5])
                 with col1:
-                    st.write(
-                        f"**{title}**"
-                    )
-
-                with col2:
-                    st.caption(
-                        f"Course: {course}"
-                    )
-
+                    st.write(f"📝 **{title}**")
+                with col2: 
+                    st.caption(f"📚 {course}")
                 with col3:
-                    st.caption(
-                        f"Type: {work_type}"
-                    )
-
-                with col4:
-                    st.caption(
-                        f"Due: {due_date}"
-                    )
-
+                    st.caption(f"⏰ Due: {due_text}")
     else:
-
-        st.info(
-            "No academic work has been published yet."
-        )
+            st.info("No academic work available.")
 
 
     # ==========================================================
@@ -1091,14 +1076,10 @@ def parent_dashboard(parent_id):
             "Latest Notices"
         )
 
-        student_notices = student_notices[:5]
+        for notice in student_notices[:5]:
 
-        for notice in student_notices:
-
-            title = (
-                notice.get("title", "Notice")
-                or "Notice"
-            )
+            title = notice.get("title", "Notice")or "Notice"
+            
 
             notice_type = (
                 notice.get(
@@ -1116,38 +1097,33 @@ def parent_dashboard(parent_id):
                 or "General"
             )
 
-            expiry_date = (
-                notice.get(
-                    "expiry_date",
-                    "Not specified"
-                )
-                or "Not specified"
-            )
+            expiry_date = notice.get("expiry_date")
+
+            if expiry_date:
+                expiry_text = str(expiry_date)
+            else:
+                expiry_text = "No expiry"
 
             with st.container(border=True):
 
-                col1, col2, col3, col4 = st.columns(
-                    [3, 2, 2, 1.5]
+                col1, col2, col3 = st.columns(
+                    [4, 2, 1.5]
                 )
 
                 with col1:
                     st.write(
-                        f"**🔔 {title}**"
+                        f"** {title}**"
                     )
 
                 with col2:
                     st.caption(
-                        f"Type: {notice_type}"
+                        st.caption(f" {course}")
                     )
 
+                
                 with col3:
                     st.caption(
-                        f"Course: {course}"
-                    )
-
-                with col4:
-                    st.caption(
-                        f"Expiry: {expiry_date}"
+                        f" {expiry_text}"
                     )
 
 
@@ -2425,13 +2401,6 @@ def parent_assignments(student_id):
         f"Showing {len(filtered_assignments)} "
         f"of {total_work} academic work items."
     )
-
-
-
-
-
-
-
 
 
 

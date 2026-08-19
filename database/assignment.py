@@ -644,7 +644,8 @@ def delete_notice(notice_id):
 
 
 
-#student assingment
+
+
 def get_student_assignments(student_id):
 
     conn = get_connection()
@@ -653,13 +654,9 @@ def get_student_assignments(student_id):
 
         cur = conn.cursor()
 
-        # 1. Student check
+        # Student ki department aur semester
         cur.execute("""
-            SELECT
-                student_id,
-                student_name,
-                department,
-                semester
+            SELECT department, semester
             FROM students
             WHERE student_id = %s
         """, (student_id,))
@@ -669,60 +666,13 @@ def get_student_assignments(student_id):
         print("STUDENT:", student)
 
         if not student:
-            print("❌ STUDENT NOT FOUND")
+            print("STUDENT NOT FOUND")
             return []
 
-        # 2. Assignment check
-        cur.execute("""
-            SELECT
-                assignment_id,
-                teacher_id,
-                course_id,
-                title,
-                description,
-                due_date,
-                file_path,
-                created_at,
-                work_type
-            FROM assignments
-            ORDER BY created_at DESC
-        """)
+        department = student[0]
+        semester = student[1]
 
-        assignment_rows = cur.fetchall()
-
-        print(
-            "TOTAL ASSIGNMENTS:",
-            len(assignment_rows)
-        )
-
-        for row in assignment_rows:
-            print("ASSIGNMENT:", row)
-
-        # 3. Student ke department/semester ke courses
-        cur.execute("""
-            SELECT
-                course_id,
-                course_code,
-                course_name,
-                department,
-                semester,
-                teacher_id
-            FROM courses
-            WHERE department = %s
-            AND semester = %s
-        """, (
-            student[2],
-            student[3]
-        ))
-
-        courses = cur.fetchall()
-
-        print(
-            "STUDENT COURSES:",
-            courses
-        )
-
-        # 4. Final assignment query
+        # Sirf active assignments fetch karo
         cur.execute("""
             SELECT
                 a.assignment_id,
@@ -742,70 +692,52 @@ def get_student_assignments(student_id):
 
             FROM assignments a
 
-            JOIN courses c
+            INNER JOIN courses c
                 ON a.course_id = c.course_id
 
             LEFT JOIN teachers t
                 ON a.teacher_id = t.teacher_id
 
-            WHERE c.department = %s
+            WHERE LOWER(c.department) = LOWER(%s)
             AND c.semester = %s
+
+            AND (
+                a.due_date IS NULL
+                OR a.due_date >= CURRENT_DATE
+            )
 
             ORDER BY
                 a.due_date ASC NULLS LAST,
                 a.created_at DESC
+
+            LIMIT 20
         """, (
-            student[2],
-            student[3]
+            department,
+            semester
         ))
 
         rows = cur.fetchall()
 
-        print(
-            "FINAL ASSIGNMENTS:",
-            rows
-        )
+        print("ASSIGNMENT ROWS:", len(rows))
 
         assignments = []
 
         for row in rows:
 
             assignments.append({
-
-                "Assignment ID": row[0],
-
-                "Title": row[1],
-
-                "Description": row[2],
-
-                "Due Date": row[3],
-
-                "File": row[4],
-
-                "Type": row[5],
-
-                "Created At": row[6],
-
-                "Course ID": row[7],
-
-                "Course Code": row[8],
-
-                "Course": row[9],
-
-                "Teacher ID": row[10],
-
-                "Teacher": (
-                    row[11]
-                    if row[11]
-                    else "Teacher"
-                )
+                "assignment_id": row[0],
+                "title": row[1],
+                "description": row[2],
+                "due_date": row[3],
+                "file_path": row[4],
+                "type": row[5],
+                "created_at": row[6],
+                "course_id": row[7],
+                "course_code": row[8],
+                "course": row[9],
+                "teacher_id": row[10],
+                "teacher": row[11] or "Teacher"
             })
-
-        print(
-            "RETURNING:",
-            len(assignments),
-            "assignments"
-        )
 
         return assignments
 
@@ -833,13 +765,71 @@ def get_student_assignments(student_id):
 
 
 
+#student assingment
+'''def get_today_attendance(student_id):
 
+    conn = get_connection()
 
+    try:
+        cur = conn.cursor()
 
+        cur.execute("""
+            SELECT
+                a.attendance_id,
+                a.student_id,
+                a.course_id,
+                c.course_name,
+                a.attendance_date,
+                a.status,
+                a.remarks
+            FROM attendance a
 
+            INNER JOIN courses c
+                ON a.course_id = c.course_id
 
+            WHERE a.student_id = %s
+            AND a.attendance_date = CURRENT_DATE
 
+            ORDER BY c.course_name
+        """, (student_id,))
 
+        rows = cur.fetchall()
+
+        print("TODAY ATTENDANCE:", rows)
+
+        attendance = []
+
+        for row in rows:
+
+            attendance.append({
+                "attendance_id": row[0],
+                "student_id": row[1],
+                "course_id": row[2],
+                "course_name": row[3],
+                "attendance_date": row[4],
+                "status": row[5],
+                "remarks": row[6]
+            })
+
+        return attendance
+
+    except Exception as e:
+
+        print(
+            "GET TODAY ATTENDANCE ERROR:",
+            repr(e)
+        )
+
+        return []
+
+    finally:
+
+        try:
+            cur.close()
+        except:
+            pass
+
+        conn.close()'''
 
 
 
@@ -877,6 +867,7 @@ def get_student_notices(student_id):
                 n.file_path,
                 n.created_at,
                 c.course_name
+
             FROM notices n
 
             INNER JOIN courses c
@@ -888,6 +879,7 @@ def get_student_notices(student_id):
 
             WHERE s.student_id = %s
 
+            -- Expired notices hide ho jayenge
             AND (
                 n.expiry_date IS NULL
                 OR n.expiry_date >= CURRENT_DATE
@@ -906,23 +898,25 @@ def get_student_notices(student_id):
 
             notices.append({
 
-                "Notice ID": row[0],
+                "notice_id": row[0],
 
-                "Title": row[1],
+                "title": row[1],
 
-                "Description": row[2],
+                "description": row[2],
 
-                "Type": row[3],
+                "notice_type": row[3],
 
-                "Expiry Date": row[4],
+                "expiry_date": row[4],
 
-                "File": row[5],
+                "file_path": row[5],
 
-                "Created At": row[6],
+                "created_at": row[6],
 
-                "Course": row[7]
+                "course": row[7]
 
             })
+
+        print("STUDENT NOTICES:", notices)
 
         return notices
 
@@ -930,12 +924,60 @@ def get_student_notices(student_id):
 
         print(
             "GET STUDENT NOTICES ERROR:",
-            e
+            repr(e)
         )
 
         return []
 
     finally:
 
-        cursor.close()
+        try:
+            cursor.close()
+        except:
+            pass
+
+        conn.close()
+
+
+
+
+
+
+def get_student_id_from_user(user_id):
+
+    conn = get_connection()
+
+    try:
+
+        cur = conn.cursor()
+
+        cur.execute("""
+            SELECT student_id
+            FROM students
+            WHERE user_id = %s
+        """, (user_id,))
+
+        result = cur.fetchone()
+
+        if result:
+            return result[0]
+
+        return None
+
+    except Exception as e:
+
+        print(
+            "GET STUDENT ID ERROR:",
+            repr(e)
+        )
+
+        return None
+
+    finally:
+
+        try:
+            cur.close()
+        except:
+            pass
+
         conn.close()
